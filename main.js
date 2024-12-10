@@ -16,9 +16,9 @@ const sqlconfig = {
     password: 'maselko1',
     server: '172.25.0.1',
     database: 'planlekcji',
-    "options": {
-        "encrypt": false, // Disable encryption
-        
+    options: {
+        encrypt: true,
+        trustServerCertificate: true
     }
 };
 
@@ -29,37 +29,14 @@ mssql.connect(sqlconfig, err => {
     console.log("Connection Successful!");
 });
 
-// Get request
+// Get request that returns info that the backend is living!
 app.get("/", async (req, res) => {
     console.log("Request!");
 
-    return res.send("Backend API")
+    return res.send("Backend API online!")
 });
 
-app.get("/select", async (req, res) => {
-    console.log("SELECT Request!");
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-
-    const key = req.query.key;
-    if (!key || key != api_key) {
-        return res.status(401).send("Wrong api key");
-    }
-
-    const table = req.query.table;
-    if (!table) {
-        return res.status(400).send("No table in querry");
-    }
-    
-    new mssql.Request().query("SELECT * FROM "+table, (err, result) => {
-        if (err) {
-            console.error("Error executing query:", err);
-        } else {
-            res.send(result.recordset); // Send query result as response
-            console.dir(result.recordset);
-        }
-    });
-});
-
+//Empty POST request
 app.post("/", (req, res) => {
     console.log("POST Request!");
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
@@ -67,25 +44,22 @@ app.post("/", (req, res) => {
     res.status(404).send("Nothing");
 })
 
+/**
+ *  SELECT request to return all data in table
+ * @param key api key
+ * @param table table name to select data from
+ */
 app.post("/select", async (req, res) => {
     console.log("SELECT POST Request!");
-    //res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
 
     const key = req.body.key;
-    if (!key || key != api_key) {
-        console.error("Wrong API key: " + key);
-        return res.status(401).send("Wrong api key");
-    }
-
-    console.log("L1");
+    if (!validateAPIKey(key)) return res.status(401).send("Wrong api key");
 
     const table = req.body.table;
     if (!table) {
         console.error("To table in request");
         return res.status(400).send("No table in querry");
     }
-
-    console.log("L2");
     
     new mssql.Request().query("SELECT * FROM "+table, (err, result) => {
         if (err) {
@@ -101,3 +75,16 @@ app.post("/select", async (req, res) => {
 app.listen(port, function () {
     console.log('Server is listening at port '+ port +'...');
 });
+
+/**
+ *  Checks if string matches api_key
+ * @param key key to validate
+ * @returns true if key matches api_key
+ */
+function validateAPIKey(key) {
+    if (!key || key != api_key) {
+        console.error("Wrong API key: " + key);
+        return false;
+    }
+    return true;
+}
