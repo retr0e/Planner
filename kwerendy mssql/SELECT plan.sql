@@ -2,6 +2,7 @@ USE [planlekcji]
 GO
 
 SELECT 
+	Classes.class_id,
 	group_number,
 	type_name,
 	Employees.first_name +' '+ Employees.last_name AS prowadzacy,

@@ -26,20 +26,22 @@
     </div>
 
     <main class="task-list">
-      <div v-for="task in tasks" :key="task.id" class="main-task-block">
-        <div class="time">{{ task.time }}</div>
+      <div v-for="task in tasks" :key="task.class_id" class="main-task-block">
+        <div class="time">{{ task.start_time }} - {{ task.end_time }}</div>
         <div class="task">
           <div class="details">
-            <div class="subject">{{ task.subject }}</div>
-            <div class="chapter">{{ task.chapter }}</div>
+            <div class="subject">{{ task.type_name }} ({{ task.group_number }})</div>
+            <div class="chapter">{{ task.date }}</div>
             <div class="meta">
-              <span class="teacher">{{ task.teacher }}</span>
-              <span class="platform">{{ task.platform }}</span>
+              <span class="teacher">Prowadzący: {{ task.prowadzacy }}</span>
+              <span class="platform">{{ task.room_number }}, {{ task.room_department_name }}</span>
             </div>
+            <div class="status">Stan: {{ task.state_name }}</div>
           </div>
         </div>
       </div>
     </main>
+
 
     <nav class="bottom-nav">
       <button
@@ -76,28 +78,16 @@ export default defineComponent({
       selectedDate: '2024-10-17',
       tasks: [
         {
-          id: 1,
-          time: '9:30 - 10:20',
-          subject: 'Physics',
-          chapter: 'Chapter 3: Force',
-          teacher: 'Alex Jesus',
-          platform: 'Google Meet',
-        },
-        {
-          id: 2,
-          time: '11:00 - 11:50',
-          subject: 'Geography',
-          chapter: 'Chapter 12: Soil Profile',
-          teacher: 'Jenifer Clark',
-          platform: 'Zoom',
-        },
-        {
-          id: 3,
-          time: '12:20 - 13:00',
-          subject: 'Assignment',
-          chapter: 'World Regional Pattern',
-          teacher: 'Alexa Tenorio',
-          platform: 'Google Docs',
+          class_id: 1,
+          group_number: "",
+          type_name: "",
+          prowadzacy: "",
+          date: "",
+          start_time: "",
+          end_time: '',
+          room_number: "",
+          room_department_name: "",
+          state_name: "",
         },
       ],
       navItems: [
@@ -118,6 +108,7 @@ export default defineComponent({
     },
   },
   mounted() {
+    this.getScheduleDataFromAPI();
     this.updateVisibleDays();
   },
   methods: {
@@ -165,6 +156,30 @@ export default defineComponent({
         item.isActive = item.label === label;
       });
     },
+
+    getScheduleDataFromAPI() {
+      const id = this.$route.params.id;
+      fetch(`http://localhost:8080/plan?id=${id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          // Mapujemy dane, aby dopasować do formatu w widoku
+          this.tasks = data.map((item: any) => ({
+            class_id: item.class_id,
+            group_number: item.group_number,
+            type_name: item.type_name,
+            prowadzacy: item.prowadzacy,
+            date: item.date,
+            start_time: item.start_time,
+            end_time: item.end_time,
+            room_number: item.room_number,
+            room_department_name: item.room_department_name,
+            state_name: item.state_name,
+          }));
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    }
   },
 });
 </script>
