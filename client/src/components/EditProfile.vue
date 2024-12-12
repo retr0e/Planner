@@ -8,13 +8,19 @@
         <input v-model="username" id="username" type="text" required />
       </div>
       <div class="form-group">
-        <label for="email">Adres email</label>
-        <input v-model="email" id="email" type="email" required />
+        <label for="password">Hasło</label>
+        <input v-model="password" id="password" type="password" required />
       </div>
+      <div class="form-group">
+        <label for="permissionLevel">Poziom dostępu</label>
+        <input v-model="permissionLevel" id="permissionLevel" type="number" required />
+      </div>
+      <!--
       <div class="form-group">
         <label for="role">Rola</label>
         <input v-model="role" id="role" type="text" required />
       </div>
+      -->
 
       <button type="submit" class="save-button">Zapisz zmiany</button>
     </form>
@@ -24,6 +30,7 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { loginData } from '../main';
 
 export default defineComponent({
   name: 'EditProfile',
@@ -32,19 +39,84 @@ export default defineComponent({
 
     // Przykładowe dane do edycji
     const username = ref('Jan Kowalski');
-    const email = ref('jan.kowalski@example.com');
-    const role = ref('Student');
+    const password = ref('examplePassword123');
+    //const role = ref('Student'); //jeszcze w bazie nie mamy kont studentów XD
+    const permissionLevel = ref(1);
+
+    const loadProfile = () => {
+      fetch("http://localhost:8080/profile/get", {
+          method: "post",
+          headers: {
+                "Content-Type": "application/json"
+            },
+          body: JSON.stringify({
+            key: loginData.session_key,
+            user_id: loginData.user_id,
+          })
+        })
+        .then(
+          res => {
+            console.log("Getting info for user " + loginData.login + " with id " + loginData.user_id);
+            return res.json();
+          })
+        .then(
+          data => {
+            if (data.ok == true) {
+              username.value = data.login,
+              permissionLevel.value = data.permission_level
+            }
+            else {
+              alert("Wystąpił problem podczas ładowania danych!");
+            }
+          })
+        .catch(
+          err => {
+            console.error(err);
+          });
+    }
+
+    loadProfile();
 
     const saveProfile = () => {
-      // Można dodać logikę zapisu danych na serwerze
-      alert('Profil został zaktualizowany!');
-      router.push({ name: 'Profile' });
+      fetch("http://localhost:8080/profile/edit", {
+          method: "post",
+          headers: {
+                "Content-Type": "application/json"
+            },
+          body: JSON.stringify({
+            key: loginData.session_key,
+            user_id: loginData.user_id,
+            newLogin: username.value,
+            newPassword: password.value,
+            newPermission_level: permissionLevel.value
+          })
+        })
+        .then(
+          res => {
+            return res.json();
+          })
+        .then(
+          data => {
+            if (data.ok == true) {
+              alert("Dane zaktualizowane");
+            }
+            else {
+              alert("Wystąpił problem podczas edycji danych!");
+            }
+            router.push({ name: 'Profile' });
+          })
+        .catch(
+          err => {
+          console.error(err);
+          router.push({ name: 'Profile' });
+        });
     };
 
     return {
       username,
-      email,
-      role,
+      password,
+      //role,
+      permissionLevel,
       saveProfile,
     };
   },

@@ -4,8 +4,9 @@
 
     <div class="profile-details">
       <p><strong>Nazwa użytkownika:</strong> {{ username }}</p>
-      <p><strong>Adres email:</strong> {{ email }}</p>
-      <p><strong>Rola:</strong> {{ role }}</p>
+      <p><strong>Poziom dostępu:</strong> {{ accessLevel }}</p>
+      <!--<p><strong>Adres email:</strong> {{ email }}</p>-->
+      <!--<p><strong>Rola:</strong> {{ role }}</p>-->
     </div>
 
     <button @click="goToEditProfile" class="edit-profile-button">
@@ -15,8 +16,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { loginData } from '../main';
 
 export default defineComponent({
   name: 'ProfileView',
@@ -24,18 +26,54 @@ export default defineComponent({
     const router = useRouter();
 
     // Przykładowe dane profilu
-    const username = 'Jan Kowalski';
-    const email = 'jan.kowalski@example.com';
-    const role = 'Student';
+    const username = ref('');
+    //const email = 'jan.kowalski@example.com';
+    //const role = 'Student';
+    const accessLevel = ref(1);
 
     const goToEditProfile = () => {
       router.push({ name: 'EditProfile' });
     };
 
+    const loadProfile = () => {
+      fetch("http://localhost:8080/profile/get", {
+          method: "post",
+          headers: {
+                "Content-Type": "application/json"
+            },
+          body: JSON.stringify({
+            key: loginData.session_key,
+            user_id: loginData.user_id,
+          })
+        })
+        .then(
+          res => {
+            console.log("Getting info for user " + loginData.login + " with id " + loginData.user_id);
+            return res.json();
+          })
+        .then(
+          data => {
+            if (data.ok == true) {
+              username.value = data.login,
+              accessLevel.value = data.permission_level
+            }
+            else {
+              alert("Wystąpił problem podczas ładowania danych!");
+            }
+          })
+        .catch(
+          err => {
+            console.error(err);
+          });
+    }
+
+    loadProfile();
+
     return {
       username,
-      email,
-      role,
+      //email,
+      //role,
+      accessLevel,
       goToEditProfile,
     };
   },

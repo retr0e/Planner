@@ -48,6 +48,7 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { loginData } from '../main';
 
 export default defineComponent({
   name: 'HomeView',
@@ -76,10 +77,41 @@ export default defineComponent({
       showLoginForm.value = !showLoginForm.value;
     };
 
+    //TODO: hashset
     const login = () => {
       if (username.value && password.value) {
-        isLoggedIn.value = true;
-        showLoginForm.value = false;
+
+        fetch("http://localhost:8080/login", {
+          method: "post",
+          headers: {
+                "Content-Type": "application/json"
+            },
+          body: JSON.stringify({
+            "login": username.value,
+            "password": password.value
+          })
+        })
+        .then(
+          res => {
+            return res.json();
+          })
+        .then(
+          data => {
+            if (data.ok == true) {
+              loginData.login = username.value;
+              loginData.session_key = data.key;
+              loginData.user_id = data.id;
+              isLoggedIn.value = true;
+              showLoginForm.value = false;
+            }
+            else {
+              alert("Niepoprawny login lub hasło!");
+            }
+          })
+        .catch(
+          err => {
+          console.error(err);
+        });
       }
     };
 

@@ -3,7 +3,8 @@
 <template>
   <div id="app">
     <header class="app-header">
-      <h1>Plan zajęć</h1>
+      <a href="/" class="inv-link"><h1>Plan zajęć</h1></a>
+      
     </header>
     <main class="app-content">
       <router-view />
@@ -30,4 +31,18 @@
 .app-content {
   margin: 16px 0;
 }
+
+.inv-link{
+  text-decoration: none;
+  color: white;
+}
+</style>
+
+<!--
+  Oczy mnie bolały od tego białego tła, a wtyczka nie działała na localhoście XD
+-->
+<style>
+  body {
+    background-color: #001f00;
+  }
 </style>
