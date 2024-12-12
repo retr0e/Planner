@@ -43,6 +43,6 @@
 -->
 <style>
   body {
-    background-color: #001f00;
+    background-color: #c3c3c3;
   }
 </style>
