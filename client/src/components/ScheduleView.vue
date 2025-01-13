@@ -27,11 +27,11 @@
 
     <main class="task-list">
       <div v-for="task in tasks" :key="task.class_id" class="main-task-block">
-        <div class="time">{{ task.start_time }} - {{ task.end_time }}</div>
+        <div class="time">{{ new Date(task.start_time).getHours() + ":" + new Date(task.start_time).getMinutes() }} - {{ new Date(task.end_time).getHours() + ":" + new Date(task.end_time).getMinutes() }}</div>
         <div class="task">
           <div class="details">
             <div class="subject">{{ task.type_name }} ({{ task.group_number }})</div>
-            <div class="chapter">{{ task.date }}</div>
+            <div class="chapter">{{  }}</div>
             <div class="meta">
               <span class="teacher">Prowadzący: {{ task.prowadzacy }}</span>
               <span class="platform">{{ task.room_number }}, {{ task.room_department_name }}</span>
@@ -75,7 +75,7 @@ export default defineComponent({
       endDate: new Date('2025-02-28'),
       currentWeekStart: new Date('2024-10-14'),
       visibleDays: [] as { day: string; date: string; isActive: boolean }[],
-      selectedDate: '2024-10-17',
+      selectedDate: '2025-01-13',
       tasks: [
         {
           class_id: 1,
@@ -108,13 +108,14 @@ export default defineComponent({
     },
   },
   mounted() {
-    this.getScheduleDataFromAPI();
     this.updateVisibleDays();
   },
   methods: {
     updateVisibleDays() {
       const days = [];
       const currentDate = new Date(this.currentWeekStart);
+
+      this.getScheduleDataFromAPI();
 
       for (let i = 0; i < 7; i++) {
         const day = currentDate.toLocaleDateString('en-US', {
@@ -157,9 +158,16 @@ export default defineComponent({
       });
     },
 
+    convertDateToSQLDateFormat(date: Date) {
+      return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+    },
+
     getScheduleDataFromAPI() {
       const id = this.$route.params.id;
-      fetch(`http://localhost:8080/plan?id=${id}`)
+      let currentWeekEndDay = this.currentWeekStart.getDate() + 6;
+      let currentWeekEnd = new Date(this.currentWeekStart.getFullYear(), this.currentWeekStart.getMonth(), currentWeekEndDay);
+
+      fetch(`http://localhost:8080/plan?id=${id}&start=${this.convertDateToSQLDateFormat(this.currentWeekStart)}&end=${this.convertDateToSQLDateFormat(currentWeekEnd)}`)
         .then((res) => res.json())
         .then((data) => {
           // Mapujemy dane, aby dopasować do formatu w widoku
@@ -297,6 +305,7 @@ export default defineComponent({
 .meta {
   display: flex;
   justify-content: space-between;
+  flex-direction: column;
   color: gray;
   font-size: 0.9em;
 }

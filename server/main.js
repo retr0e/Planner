@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const mssql = require("mssql");
+const { start } = require("repl");
 
 const port = 8080;
 const api_key = "asdfghjkl";
@@ -123,15 +124,23 @@ app.post("/login", (req, res) => {
 
 app.get("/plan", (req, res) => {
   let id = -1;
+  start_date = "2025-01-06";
+  end_date = "2025-01-12";
 
   if (req.query.id != null) {
     id = req.query.id;
   }
+  if (req.query.start != null) {
+    start_date = req.query.start;
+  }
+  if (req.query.end != null) {
+    end_date = req.query.end;
+  }
 
   const query =
-    "SELECT Classes.class_id,group_number,type_name,Employees.first_name +' '+ Employees.last_name AS prowadzacy,Classes_dates.date,start_time,end_time,room_number,Department.name AS room_department_name,state_name FROM Schedules JOIN Classes ON Schedules.schedule_id = Classes.schedule_id JOIN Classes_dates ON Classes_dates.class_id =  Classes.class_id JOIN Rooms ON Rooms.room_id = Classes_dates.room_id JOIN Department ON Department.department_id = Rooms.department_id JOIN Classes_state ON Classes_state.class_state_id = Classes_dates.state_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Groups ON Groups.group_id = Classes.group_id JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id WHERE Schedules.schedule_id =" +
-    id;
+    "SELECT Classes.class_id,Groups.group_number,Groups_type.type_name,Employees.position,Employees.first_name +' '+ Employees.last_name AS prowadzacy,Classes_dates.date,Classes_dates.start_time,Classes_dates.end_time,Rooms.room_number,Department.name AS room_department_name,state_name FROM Schedules JOIN Classes ON Schedules.schedule_id = Classes.schedule_id JOIN Classes_dates ON Classes_dates.class_id =  Classes.class_id JOIN Rooms ON Rooms.room_id = Classes_dates.room_id JOIN Department ON Department.department_id = Rooms.department_id JOIN Classes_state ON Classes_state.class_state_id = Classes_dates.state_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Groups ON Groups.group_id = Classes.group_id JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id WHERE Schedules.schedule_id = "+id+" AND date > '"+start_date+"' AND date < '"+end_date+"' ORDER BY Classes_dates.date";
 
+    console.log(query);
   new mssql.Request().query(query, (err, result) => {
     if (err) {
       console.error("Error executing query: ", err);
