@@ -52,8 +52,8 @@
           :class="classItem.type.toLowerCase()"
         >
           <div class="schedule-header">
-            <strong>{{ classItem.subject.name }}</strong>
-            <span class="subject-code">Kod: {{ classItem.subject.code }}</span>
+            <strong>{{ classItem.subject_name }}</strong>
+            <span class="subject-code">Kod: {{ classItem.subject_code }}</span>
           </div>
           <div class="schedule-details">
             <p>Typ: {{ classItem.type }}</p>
@@ -81,7 +81,8 @@ export default {
       fullSchedule: [
         {
           id: 1,
-          subject: { name: 'Matematyka', code: 'MATH101' },
+          subject_name: 'Matematyka',
+          subject_code: 'MATH101',
           type: 'Wykład',
           date: '2025-01-15',
           start_time: '08:00',
@@ -180,9 +181,20 @@ export default {
           item.date === this.selectedDate
       );
     },
+    getScheduleFromAPI() {
+      axios
+        .get('https://localhost/plan')
+        .then((response) => {
+          this.fullSchedule = response.data;
+          this.initializeFilters();
+        })
+        .catch((error) => {
+          console.error('There was an error while downloading schedule!', error);
+        });
+    },
   },
   mounted() {
-    this.initializeFilters();
+    this.getScheduleFromAPI();
   },
 };
 </script>
