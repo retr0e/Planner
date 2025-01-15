@@ -4,13 +4,11 @@ const cors = require("cors");
 const app = express();
 const mssql = require("mssql");
 const { start } = require("repl");
+const https = require('https')
+const fs = require('fs')
 
 const port = 8080;
 const api_key = "asdfghjkl";
-
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 const sqlconfig = {
   user: "sa",
@@ -23,12 +21,29 @@ const sqlconfig = {
   },
 };
 
+const corsOptions = {
+  origin: "http://localhost:8081",
+  optionsSuccessStatus: 200,
+  credentials: true,
+};
+
+const httpsOptions = {
+  key: fs.readFileSync('./security/cert.key'),
+  cert: fs.readFileSync('./security/cert.pem')
+}
+
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 mssql.connect(sqlconfig, (err) => {
   if (err) {
     throw err;
   }
   console.log("Connection Successful!");
 });
+
+
 
 // Get request that returns info that the backend is living!
 app.get("/", async (req, res) => {
@@ -476,6 +491,11 @@ app.delete("/departments/:id", async (req, res) => {
 app.listen(port, function () {
   console.log("Server is listening at port " + port + "...");
 });
+
+const server = https.createServer(httpsOptions, app)
+    .listen(443, () => {
+        console.log('https server running at ' + 443)
+    });
 
 /**
  *  Checks if string matches api_key
