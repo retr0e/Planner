@@ -48,7 +48,13 @@ export default {
             withCredentials: true,
           }
         );
-        this.$router.push('/schedule');
+        console.log(res.data);
+        localStorage.setItem('authToken', JSON.stringify(res.data.token));
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        localStorage.setItem('userRole', JSON.stringify(res.data.userRole));
+        
+        open("/", '_self').close();
+        this.$router.push('/');
       } catch (err) {
         this.error = 'Błędny login lub hasło';
       }

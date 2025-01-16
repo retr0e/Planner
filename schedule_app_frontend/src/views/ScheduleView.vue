@@ -94,7 +94,8 @@ export default {
         },
         {
           id: 2,
-          subject: { name: 'Fizyka', code: 'PHYS201' },
+          subject_name: 'Fizyka', 
+          subject_code: 'PHYS201',
           type: 'Ćwiczenia',
           date: '2025-01-15',
           start_time: '10:00',
@@ -106,7 +107,8 @@ export default {
         },
         {
           id: 3,
-          subject: { name: 'Programowanie', code: 'CS102' },
+          subject_name: 'Programowanie',
+          subject_code: 'CS102',
           type: 'Wykład',
           date: '2025-01-16',
           start_time: '08:00',

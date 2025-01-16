@@ -14,7 +14,7 @@ SELECT
 	state_name
   Subject.name AS subject_name
   Subject.course_code AS subject_code
-  Semesters.nr_semestru AS semester
+  Semesters.nr_semester AS semester
   Direction.direction_name AS direction
   FROM Schedules
   JOIN Classes ON Schedules.schedule_id = Classes.schedule_id
@@ -27,7 +27,7 @@ SELECT
   JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id
   JOIN Subject ON Subject.subject_id = Groups.subject_id
   JOIN Semesters ON Semesters.semester_id = Schedules.semester_id
-  JOIN Direction ON Direction.direction_id = Semesters.direction_id
+  JOIN Direction ON Direction.direction_id = Schedules.direction_id
 
 GO
 

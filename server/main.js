@@ -4,11 +4,13 @@ const cors = require("cors");
 const app = express();
 const mssql = require("mssql");
 const { start } = require("repl");
-const https = require('https')
-const fs = require('fs')
+const https = require('https');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
 const port = 8080;
 const api_key = "asdfghjkl";
+let logged_users_uuids = [];
 
 const sqlconfig = {
   user: "sa",
@@ -116,11 +118,16 @@ app.post("/login", (req, res) => {
         if (result.recordset.length > 0) {
           console.log("Login successfull");
           console.dir(result.recordset);
+
+          const new_uuid = uuidv4();
+          logged_users_uuids.push(new_uuid);
+
           return res.status(200).json({
             ok: true,
-            key: "asdfghjkl",
-            permission_level: result.recordset[0].permission_level,
+            token: new_uuid,
+            userRole: result.recordset[0].permission_level,
             id: result.recordset[0].employee_account_id,
+            user: login,
           });
         } else {
           console.log("Not found login " + login);
@@ -133,6 +140,16 @@ app.post("/login", (req, res) => {
       }
     }
   );
+});
+
+app.post("/logout", (req, res) => {
+  const key = req.body.key;
+  if (!logged_users_uuids.includes(key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  logged_users_uuids = logged_users_uuids.filter((uuid) => uuid !== key);
+  return res.status(200).json({ ok: true });
 });
 
 //OPERACJE NA PLANIE
@@ -155,7 +172,7 @@ app.get("/plan-czesc", (req, res) => {
   const query =
     "SELECT Classes.class_id,Groups.group_number,Groups_type.type_name,Employees.position,Employees.first_name +' '+ Employees.last_name AS prowadzacy,Classes_dates.date,Classes_dates.start_time,Classes_dates.end_time,Rooms.room_number,Department.name AS room_department_name,state_name FROM Schedules JOIN Classes ON Schedules.schedule_id = Classes.schedule_id JOIN Classes_dates ON Classes_dates.class_id =  Classes.class_id JOIN Rooms ON Rooms.room_id = Classes_dates.room_id JOIN Department ON Department.department_id = Rooms.department_id JOIN Classes_state ON Classes_state.class_state_id = Classes_dates.state_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Groups ON Groups.group_id = Classes.group_id JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id WHERE Schedules.schedule_id = "+id+" AND date > '"+start_date+"' AND date < '"+end_date+"' ORDER BY Classes_dates.date";
 
-    console.log(query);
+    //console.log(query);
   new mssql.Request().query(query, (err, result) => {
     if (err) {
       console.error("Error executing query: ", err);
@@ -172,7 +189,7 @@ app.get("/plan", (req, res) => {
   const query =
     "SELECT Classes.class_id AS id, group_number, type_name AS type, Employees.first_name + ' ' + Employees.last_name AS instructor, Classes_dates.date, start_time, end_time, room_number AS room, Department.name AS room_department_name, state_name, Subject.name AS subject_name, Subject.course_code AS subject_code, Semesters.nr_semester AS semester, Direction.direction_name AS direction FROM Schedules JOIN Classes ON Schedules.schedule_id = Classes.schedule_id JOIN Classes_dates ON Classes_dates.class_id = Classes.class_id JOIN Rooms ON Rooms.room_id = Classes_dates.room_id JOIN Department ON Department.department_id = Rooms.department_id JOIN Classes_state ON Classes_state.class_state_id = Classes_dates.state_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Groups ON Groups.group_id = Classes.group_id JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id JOIN Subject ON Subject.subject_id = Groups.subject_id JOIN Semesters ON Semesters.semester_id = Schedules.semester_id JOIN Direction ON Direction.direction_id = Schedules.direction_id;";
 
-    console.log(query);
+    //console.log(query);
   new mssql.Request().query(query, (err, result) => {
     if (err) {
       console.error("Error executing query: ", err);
@@ -188,7 +205,7 @@ app.get("/plan", (req, res) => {
 //OPERACJE NA UŻYTKOWNIKACH
 
 app.post("/profile/get", (req, res) => {
-  if (req.body.key != api_key) {
+  if (!logged_users_uuids.includes(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
 
@@ -227,7 +244,7 @@ app.post("/profile/get", (req, res) => {
 
 app.post("/profile/edit", (req, res) => {
   console.log("Profile edit request");
-  if (req.body.key != api_key) {
+  if (!logged_users_uuids.includes(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
 
@@ -520,7 +537,7 @@ const server = https.createServer(httpsOptions, app)
  * @returns true if key matches api_key
  */
 function validateAPIKey(key) {
-  if (!key || key != api_key) {
+  if (!key || !logged_users_uuids.includes(req.body.key)) {
     console.error("Wrong API key: " + key);
     return false;
   }
