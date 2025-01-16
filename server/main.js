@@ -206,7 +206,7 @@ app.get("/plan", (req, res) => {
 
 app.post("/profile/get-all", (req, res) => {
   if (validateAPIKey(req.body.key)) {
-    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+    return res.status(401).json({ ok: false, reason: "Invalid session key: "+req.body.key });
   }
 
   new mssql.Request().query("SELECT employee_account_id AS id, login, type_name AS account_type, first_name, last_name, permission_level FROM Employees_accounts JOIN Employees ON Employees_accounts.employee_id = Employees.employee_id JOIN Accounts_type ON Accounts_type.account_type_id = Employees_accounts.account_type_id", (err, result) => {
@@ -214,6 +214,7 @@ app.post("/profile/get-all", (req, res) => {
       console.error("Error executing query: ", err);
       return res.status(500).json({ ok: false, reason: "Database error" });
     }
+    console.log("Sending all users");
     return res.status(200).json({ ok: true, users: result.recordset });
   });
 });
@@ -551,7 +552,10 @@ const server = https.createServer(httpsOptions, app)
  * @returns true if key matches api_key
  */
 function validateAPIKey(key) {
-  if (!key || !logged_users_uuids.includes(req.body.key)) {
+
+  console.dir(logged_users_uuids);
+
+  if (!key || !logged_users_uuids.includes(key)) {
     console.error("Wrong API key: " + key);
     return false;
   }

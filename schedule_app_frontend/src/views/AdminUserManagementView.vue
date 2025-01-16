@@ -48,7 +48,9 @@
         }
       },
       getUsersFromAPI() {
-        axios.post('https://localhost/profile/get-all')
+        axios.post('https://localhost/profile/get-all',
+          {key: localStorage.getItem('authToken')}
+        )
           .then((response) => {
             this.users = response.data.users;
           })
