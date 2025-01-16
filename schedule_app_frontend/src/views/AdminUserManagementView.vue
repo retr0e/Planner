@@ -8,25 +8,16 @@
             <th>Login</th>
             <th>Imię</th>
             <th>Nazwisko</th>
-            <th>Aktywne</th>
+            <th>Poziom dostępu</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="user in users" :key="user.id">
             <td>{{ user.id }}</td>
             <td>{{ user.login }}</td>
-            <td>{{ user.firstName }}</td>
-            <td>{{ user.lastName }}</td>
-            <td>
-              <label class="switch">
-                <input
-                  type="checkbox"
-                  :checked="user.active"
-                  @change="toggleUserActivity(user.id)"
-                />
-                <span class="slider"></span>
-              </label>
-            </td>
+            <td>{{ user.first_name }}</td>
+            <td>{{ user.last_name }}</td>
+            <td>{{ user.permission_level }}</td>
           </tr>
         </tbody>
       </table>
@@ -34,14 +25,16 @@
   </template>
   
   <script>
+  import axios from 'axios';
+
   export default {
     data() {
       return {
         // Przykładowa lista użytkowników
         users: [
-          { id: 1, login: 'admin', firstName: 'Jan', lastName: 'Kowalski', active: true },
-          { id: 2, login: 'jdoe', firstName: 'John', lastName: 'Doe', active: true },
-          { id: 3, login: 'aszym', firstName: 'Anna', lastName: 'Szymańska', active: false },
+          { id: 1, login: 'admin', first_name: 'Jan', last_name: 'Kowalski', active: true },
+          { id: 2, login: 'jdoe', first_name: 'John', last_name: 'Doe', active: true },
+          { id: 3, login: 'aszym', first_name: 'Anna', last_name: 'Szymańska', active: false },
         ],
       };
     },
@@ -54,6 +47,18 @@
           console.log(`Użytkownik ${userId} aktywny: ${user.active}`);
         }
       },
+      getUsersFromAPI() {
+        axios.post('https://localhost/profile/get-all')
+          .then((response) => {
+            this.users = response.data.users;
+          })
+          .catch((error) => {
+            console.error('Błąd pobierania danych:', error);
+          });
+      }
+    },
+    mounted() {
+      this.getUsersFromAPI();
     },
   };
   </script>

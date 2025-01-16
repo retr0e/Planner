@@ -204,6 +204,20 @@ app.get("/plan", (req, res) => {
 
 //OPERACJE NA UŻYTKOWNIKACH
 
+app.post("/profile/get-all", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  new mssql.Request().query("SELECT employee_account_id AS id, login, type_name AS account_type, first_name, last_name, permission_level FROM Employees_accounts JOIN Employees ON Employees_accounts.employee_id = Employees.employee_id JOIN Accounts_type ON Accounts_type.account_type_id = Employees_accounts.account_type_id", (err, result) => {
+    if (err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ ok: false, reason: "Database error" });
+    }
+    return res.status(200).json({ ok: true, users: result.recordset });
+  });
+});
+
 app.post("/profile/get", (req, res) => {
   if (!logged_users_uuids.includes(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
