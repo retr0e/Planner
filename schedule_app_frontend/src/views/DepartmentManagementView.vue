@@ -19,16 +19,6 @@
             required
           />
         </div>
-        <div class="form-group">
-          <label for="employees">Liczba Pracowników</label>
-          <input
-            type="number"
-            id="employees"
-            v-model.number="form.employees"
-            placeholder="Wprowadź liczbę pracowników"
-            required
-          />
-        </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">
             {{ editMode ? 'Zapisz' : 'Dodaj' }}

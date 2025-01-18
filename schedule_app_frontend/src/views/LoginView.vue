@@ -52,11 +52,13 @@ export default {
         localStorage.setItem('authToken', JSON.stringify(res.data.token));
         localStorage.setItem('user', JSON.stringify(res.data.user));
         localStorage.setItem('userRole', JSON.stringify(res.data.userRole));
+        localStorage.setItem('userId', JSON.stringify(res.data.id));
         
         open("/", '_self').close();
         this.$router.push('/');
       } catch (err) {
-        this.error = 'Błędny login lub hasło';
+        //this.error = 'Błędny login lub hasło';
+        this.error = err.response.data.reason;
       }
     },
   },

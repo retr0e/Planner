@@ -58,7 +58,7 @@
           <div class="schedule-details">
             <p>Typ: {{ classItem.type }}</p>
             <p>
-              Godziny: {{ classItem.start_time }} - {{ classItem.end_time }}
+              Godziny: {{ new Date(classItem.start_time).getHours() + ":" + new Date(classItem.start_time).getMinutes() }} - {{ new Date(classItem.end_time).getHours() + ":" + new Date(classItem.end_time).getMinutes() }}
             </p>
             <p>Sala: {{ classItem.room }}</p>
             <p>Wykładowca: {{ classItem.instructor }}</p>
@@ -117,20 +117,7 @@ export default {
           instructor: 'Dr. Wiśniewski',
           semester: 3,
           direction: 'Automatyka',
-        },
-        {
-          id: 4,
-          subject: { name: 'Algorytmy', code: 'CS202' },
-          type: 'Ćwiczenia',
-          date: '2025-01-17',
-          start_time: '10:00',
-          end_time: '11:30',
-          room: 'D404',
-          instructor: 'Dr. Lewandowska',
-          semester: 5,
-          direction: 'Matematyka',
-        },
-        // Add more entries here...
+        }
       ],
       availableSemesters: [],
       availableDirections: [],

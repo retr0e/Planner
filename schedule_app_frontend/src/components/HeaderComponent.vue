@@ -4,7 +4,7 @@
         <ul class="nav-list">
 
           <li>
-            <router-link to="/">Home</router-link>
+            <router-link to="/">Plan lekcji</router-link>
           </li>
           
           <li v-if="!isLoggedIn" class="nav-item">
@@ -15,7 +15,7 @@
             <a @click="logout" class="nav-link">Wyloguj</a>
           </li>
   
-          <li v-if="isUser" class="nav-item">
+          <li v-if="isUser" class="nav-item nav-list">
             <li><router-link to="/edit" class="nav-link">Zarządzaj planem</router-link></li>
             <li><router-link to="/departments" class="nav-link">Zarządzaj wydziałami</router-link></li>
           </li>
@@ -42,12 +42,12 @@ import { ref } from 'vue';
         }
       },
       isUser() {
-        if (localStorage.getItem('userRole') < 3 && localStorage.getItem('userRole') > 0 ) {
+        if (localStorage.getItem('userRole') > 1) {
           return true;
         }
       },
       isAdmin() {
-        if (localStorage.getItem('userRole') == 3) {
+        if (localStorage.getItem('userRole') == 1) {
           return true;
         }
       }
