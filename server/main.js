@@ -494,6 +494,101 @@ app.post("/employees/delete", (req, res) => {
   );
 });
 
+//CRUD USER TYPES
+app.post("/user-types/get-all", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  new mssql.Request().query("SELECT account_type_id AS id, type_name AS account_type_name FROM Accounts_type", (err, result) => {
+    if (err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ ok: false, reason: "Database error" });
+    }
+    return res.status(200).json({ ok: true, account_types: result.recordset });
+  });
+});
+
+app.post("/user-types/add", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  const account_type_name = req.body.account_type_name;
+  if (
+    account_type_name == null
+  ) {
+    return res
+      .status(400)
+      .json({ ok: false, reason: "No account_type_name" });
+  }
+
+  new mssql.Request().query(
+    "INSERT INTO Accounts_type (type_name) VALUES('" + account_type_name + "')",
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
+app.post("/user-types/update", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  const id = req.body.id;
+  const account_type_name = req.body.account_type_name;
+  if (
+    id == null ||
+    account_type_name == null
+  ) {
+    return res
+      .status(400)
+      .json({ ok: false, reason: "No id or account_type_name" });
+  }
+
+  new mssql.Request().query(
+    "UPDATE Accounts_type SET type_name = '" + account_type_name +
+      "' WHERE account_type_id =" + id,
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
+app.post("/user-types/delete", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  const id = req.body.id;
+  if (id == null) {
+    return res.status(400).json({ ok: false, reason: "No id" });
+  }
+
+  new mssql.Request().query(
+    "DELETE FROM Accounts_type WHERE account_type_id =" + id,
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
 //START SERWERA
 app.listen(port, function () {
   console.log("Server is listening at port " + port + "...");
@@ -512,11 +607,12 @@ const server = https.createServer(httpsOptions, app)
 function validateAPIKey(key) {
 
   console.dir(logged_users_uuids);
+  key = key.replace(/"/g, "");
 
   //if (!key || !logged_users_uuids.includes(key)) {
-  if (!key || key !== api_key) {
+  if (!key || key != api_key) {
     console.error("Wrong API key: " + key);
-    return false;
+    return true;
   }
-  return true;
+  return false;
 }

@@ -24,6 +24,7 @@
             <li><router-link to="/departments" class="nav-link">Zarządzaj wydziałami</router-link></li>
             <li><router-link to="/admin/users" class="nav-link">Zarządzaj użytkownikami</router-link></li>
             <li><router-link to="/admin/employees" class="nav-link">Zarządzaj pracownikami</router-link></li>
+            <li><router-link to="/admin/user-types" class="nav-link">Zarządzaj typami uzytkowników</router-link></li>
           </div>
         </ul>
       </nav>

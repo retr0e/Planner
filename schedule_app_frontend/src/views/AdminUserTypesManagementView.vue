@@ -1,24 +1,14 @@
 <template>
-    <div class="employee-management">
-        <h1>Zarządzanie Pracownikami</h1>
+    <div class="type-management">
+        <h1>Zarządzanie Typami Użytkownika</h1>
 
         <!-- Formularz dodawania/modyfikacji Pracownika -->
         <div class="form-card">
-            <h2>{{ editMode ? 'Edytuj Pracownika' : 'Dodaj Pracownika' }}</h2>
-            <form @submit.prevent="saveEmployee">
+            <h2>{{ editMode ? 'Edytuj Typ Użytkownika' : 'Dodaj Typ Użytkownika' }}</h2>
+            <form @submit.prevent="saveType">
                 <div class="form-group">
-                    <label for="first_name">Imię *</label>
-                    <input type="text" id="first_name" v-model="form.first_name" placeholder="Wprowadź imię" required />
-                </div>
-                <div class="form-group">
-                    <label for="last_name">Nazwisko *</label>
-                    <input type="text" id="last_name" v-model="form.last_name" placeholder="Wprowadź nazwisko"
-                        required />
-                </div>
-                <div class="form-group">
-                    <label for="position">Stanowisko *</label>
-                    <input type="text" id="position" v-model="form.position" placeholder="Wprowadź stanowisko"
-                        required />
+                    <label for="account_type_name">Nazwa *</label>
+                    <input type="text" id="account_type_name" v-model="form.account_type_name" placeholder="Wprowadź nazwę" required />
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">
@@ -31,17 +21,17 @@
             </form>
         </div>
 
-        <!-- Lista Pracowników -->
-        <div class="employee-list">
-            <h2>Lista Pracowników</h2>
+        <!-- Lista Typów Użytkowników -->
+        <div class="types-list">
+            <h2>Lista Typów Użytkowników</h2>
             <ul>
-                <li v-for="(employee, index) in employees" :key="index" class="list-item">
+                <li v-for="(type, index) in types" :key="index" class="list-item">
                     <span>
-                        <strong>{{ employee.first_name }} {{ employee.last_name }}</strong> - {{ employee.position }}
+                        <strong>{{ type.account_type_name }}</strong>
                     </span>
                     <div class="actions">
-                        <button class="btn btn-edit" @click="editEmployee(index)">Edytuj</button>
-                        <button class="btn btn-delete" @click="deleteEmployee(index)">Usuń</button>
+                        <button class="btn btn-edit" @click="editType(index)">Edytuj</button>
+                        <button class="btn btn-delete" @click="deleteType(index)">Usuń</button>
                     </div>
                 </li>
             </ul>
@@ -55,29 +45,25 @@ import axios from 'axios';
 export default {
     data() {
         return {
-            employees: [],
+            types: [],
             form: {
                 id: null,
-                first_name: '',
-                last_name: '',
-                position: '',
+                account_type_name: '',
             },
             editMode: false,
             editIndex: null,
         };
     },
     methods: {
-        saveEmployee() {
+        saveType() {
             if (this.editMode) {
-                axios.post('https://localhost/employees/update', {
+                axios.post('https://localhost/user-types/update', {
                     key: localStorage.getItem('authToken'),
                     id: this.form.id,
-                    first_name: this.form.first_name,
-                    last_name: this.form.last_name,
-                    position: this.form.position,
+                    account_type_name: this.form.account_type_name,
                 })
                     .then((response) => {
-                        this.getEmployeesFromAPI();
+                        this.getTypesFromAPI();
                         this.resetForm();
                     })
                     .catch((error) => {
@@ -85,14 +71,12 @@ export default {
                         this.displayError(error.response.data.reason);
                     });
             } else {
-                axios.post('https://localhost/employees/add', {
+                axios.post('https://localhost/user-types/add', {
                     key: localStorage.getItem('authToken'),
-                    first_name: this.form.first_name,
-                    last_name: this.form.last_name,
-                    position: this.form.position,
+                    account_type_name: this.form.account_type_name,
                 })
                     .then((response) => {
-                        this.getEmployeesFromAPI();
+                        this.getTypesFromAPI();
                         this.resetForm();
                     })
                     .catch((error) => {
@@ -102,18 +86,18 @@ export default {
             }
 
         },
-        editEmployee(index) {
+        editType(index) {
             this.editIndex = index;
-            this.form = { ...this.employees[index] };
+            this.form = { ...this.types[index] };
             this.editMode = true;
         },
-        deleteEmployee(index) {
-            axios.post('https://localhost/employees/delete', {
+        deleteType(index) {
+            axios.post('https://localhost/user-types/delete', {
                 key: localStorage.getItem('authToken'),
-                id: this.employees[index].id,
+                id: this.types[index].id,
             })
                 .then((response) => {
-                    this.employees.splice(index, 1);
+                    this.types.splice(index, 1);
                 })
                 .catch((error) => {
                     console.error('Błąd usuwania danych:', error);
@@ -126,9 +110,7 @@ export default {
         resetForm() {
             this.form = {
                 id: null,
-                first_name: '',
-                last_name: '',
-                position: '',
+                account_type_name: '',
             };
             this.editMode = false;
             this.editIndex = null;
@@ -137,12 +119,12 @@ export default {
             console.error(error);
             this.$toast.error(error);
         },
-        getEmployeesFromAPI() {
-            axios.post('https://localhost/employees/get-all', {
+        getTypesFromAPI() {
+            axios.post('https://localhost/user-types/get-all', {
                 key: localStorage.getItem('authToken'),
             })
                 .then((response) => {
-                    this.employees = response.data.employees;
+                    this.types = response.data.account_types;
                 })
                 .catch((error) => {
                     console.error('Błąd pobierania danych:', error);
@@ -151,13 +133,13 @@ export default {
         },
     },
     mounted() {
-        this.getEmployeesFromAPI();
+        this.getTypesFromAPI();
     },
 };
 </script>
 
 <style scoped>
-.employee-management {
+.type-management {
     font-family: Arial, sans-serif;
     max-width: 700px;
     margin: 2rem auto;
@@ -234,7 +216,7 @@ input:focus {
     color: white;
 }
 
-.employee-list ul {
+.type-list ul {
     list-style: none;
     padding: 0;
 }

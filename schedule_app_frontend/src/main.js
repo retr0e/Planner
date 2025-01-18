@@ -19,7 +19,4 @@ const Toastoptions = {
 app.use(router);
 app.use(Toast, Toastoptions);
 
-console.log(app.config.globalProperties.$toast); 
-console.log(app);
-
 app.mount('#app');

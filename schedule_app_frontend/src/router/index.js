@@ -7,6 +7,7 @@ import NotFoundView from '../views/NotFoundView.vue';
 import DepartmentManagementView from '../views/DepartmentManagementView.vue';
 import AdminUserManagementView from '../views/AdminUserManagementView.vue';
 import AdminEmployeesManagementView from '@/views/AdminEmployeesManagementView.vue';
+import AdminUserTypesManagementView from '@/views/AdminUserTypesManagementView.vue';
 
 // Definicje tras
 const routes = [
@@ -43,6 +44,12 @@ const routes = [
     path: '/admin/employees',
     name: 'AdminEmployeesManagement',
     component: AdminEmployeesManagementView,
+    meta: { requiresAuth: true, requiresAdmin: true },
+  },
+  {
+    path: '/admin/user-types',
+    name: 'AdminUserTypesManagement',
+    component: AdminUserTypesManagementView,
     meta: { requiresAuth: true, requiresAdmin: true },
   },
   {
