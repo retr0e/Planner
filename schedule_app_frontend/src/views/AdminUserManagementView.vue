@@ -105,13 +105,12 @@ export default {
           employee_id: this.form.employee_id,
         })
           .then((response) => {
-            //console.log(this.form);
-            //this.users[this.editIndex] = { ...this.form };
             this.getUsersFromAPI();
             this.resetForm();
           })
           .catch((error) => {
             console.error('Błąd zapisu danych:', error);
+            this.displayError(error.response.data.reason);
           });
       } else {
         axios.post('https://localhost/profile/add', {
@@ -122,13 +121,12 @@ export default {
           employee_id: this.form.employee_id,
         })
           .then((response) => {
-            //console.log(this.form);
-            //this.users.push({ ...this.form });
             this.getUsersFromAPI();
             this.resetForm();
           })
           .catch((error) => {
             console.error('Błąd zapisu danych:', error);
+            this.displayError(error.response.data.reason);
           });
       }
       
@@ -148,6 +146,7 @@ export default {
         })
         .catch((error) => {
           console.error('Błąd usuwania danych:', error);
+          this.displayError(error.response.data.reason);
         });
     },
     cancelEdit() {
@@ -164,6 +163,10 @@ export default {
       this.editMode = false;
       this.editIndex = null;
     },
+    displayError(error) {
+            console.error(error);
+            this.$toast.error(error);
+        },
     getUsersFromAPI() {
       axios.post('https://localhost/profile/get-all', {
         key: localStorage.getItem('authToken'),
@@ -173,6 +176,7 @@ export default {
         })
         .catch((error) => {
           console.error('Błąd pobierania danych:', error);
+          this.displayError(error.response.data.reason);
         });
     },
     getAccountTypesFromAPI() {
@@ -184,6 +188,7 @@ export default {
         })
         .catch((error) => {
           console.error('Błąd pobierania danych:', error);
+          this.displayError(error.response.data.reason);
         });
     },
     getEmployeesFromAPI() {
@@ -195,6 +200,7 @@ export default {
         })
         .catch((error) => {
           console.error('Błąd pobierania danych:', error);
+          this.displayError(error.response.data.reason);
         });
     },
   },

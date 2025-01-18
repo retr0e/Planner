@@ -135,7 +135,7 @@ export default {
         },
         displayError(error) {
             console.error(error);
-            alert(error);
+            this.$toast.error(error);
         },
         getEmployeesFromAPI() {
             axios.post('https://localhost/employees/get-all', {

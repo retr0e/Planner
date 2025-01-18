@@ -3,28 +3,28 @@
       <nav class="nav">
         <ul class="nav-list">
 
-          <li>
+          <div>
             <router-link to="/">Plan lekcji</router-link>
-          </li>
+          </div>
           
-          <li v-if="!isLoggedIn" class="nav-item">
+          <div v-if="!isLoggedIn" class="nav-item">
             <router-link to="/login" class="nav-link">Logowanie</router-link>
-          </li>
+          </div>
 
-          <li v-else class="nav-item">
+          <div v-else class="nav-item">
             <a @click="logout" class="nav-link">Wyloguj</a>
-          </li>
+          </div>
   
-          <li v-if="isUser" class="nav-item nav-list">
+          <div v-if="isUser" class="nav-item nav-list">
             <li><router-link to="/edit" class="nav-link">Zarządzaj planem</router-link></li>
-          </li>
+          </div>
           
-          <li v-else-if="isAdmin" class="nav-item nav-list">
+          <div v-else-if="isAdmin" class="nav-item nav-list">
             <li><router-link to="/edit" class="nav-link">Zarządzaj planem</router-link></li>
             <li><router-link to="/departments" class="nav-link">Zarządzaj wydziałami</router-link></li>
             <li><router-link to="/admin/users" class="nav-link">Zarządzaj użytkownikami</router-link></li>
             <li><router-link to="/admin/employees" class="nav-link">Zarządzaj pracownikami</router-link></li>
-          </li>
+          </div>
         </ul>
       </nav>
     </header>
