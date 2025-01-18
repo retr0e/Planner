@@ -5,7 +5,8 @@ import LoginView from '../views/LoginView.vue';
 import DailyScheduleView from '../views/DailyScheduleView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 import DepartmentManagementView from '../views/DepartmentManagementView.vue';
-import AdminUserManagementView from '../views/AdminUserManagementView.vue'; 
+import AdminUserManagementView from '../views/AdminUserManagementView.vue';
+import AdminEmployeesManagementView from '@/views/AdminEmployeesManagementView.vue';
 
 // Definicje tras
 const routes = [
@@ -37,6 +38,12 @@ const routes = [
     name: 'AdminUserManagement',
     component: AdminUserManagementView, 
     meta: { requiresAuth: true, requiresAdmin: true }, 
+  },
+  {
+    path: '/admin/employees',
+    name: 'AdminEmployeesManagement',
+    component: AdminEmployeesManagementView,
+    meta: { requiresAuth: true, requiresAdmin: true },
   },
   {
     path: '/:pathMatch(.*)*',

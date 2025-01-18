@@ -209,7 +209,7 @@ app.post("/profile/get-all", (req, res) => {
     return res.status(401).json({ ok: false, reason: "Invalid session key: "+req.body.key });
   }
 
-  new mssql.Request().query("SELECT employee_account_id AS id, login, type_name AS account_type_name, Accounts_type.account_type_id AS account_type, first_name, last_name, Employees.employee_id FROM Employees_accounts JOIN Employees ON Employees_accounts.employee_id = Employees.employee_id JOIN Accounts_type ON Accounts_type.account_type_id = Employees_accounts.account_type_id", (err, result) => {
+  new mssql.Request().query("SELECT employee_account_id AS id, login, type_name AS account_type_name, Accounts_type.account_type_id AS account_type, first_name, last_name, Employees.employee_id FROM Employees_accounts LEFT JOIN Employees ON Employees_accounts.employee_id = Employees.employee_id JOIN Accounts_type ON Accounts_type.account_type_id = Employees_accounts.account_type_id", (err, result) => {
     if (err) {
       console.error("Error executing query: ", err);
       return res.status(500).json({ ok: false, reason: "Database error" });
@@ -374,7 +374,21 @@ app.post("/profile/delete", (req, res) => {
 });
 
 //CRUD EMPLOYEES
-app.post("/employees", (req, res) => {
+app.post("/employees/get-all", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  new mssql.Request().query("SELECT employee_id AS id, first_name, last_name, position FROM Employees", (err, result) => {
+    if (err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ ok: false, reason: "Database error" });
+    }
+    return res.status(200).json({ ok: true, employees: result.recordset });
+  });
+});
+
+app.post("/employees/get-all-joinedname", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
@@ -388,246 +402,99 @@ app.post("/employees", (req, res) => {
   });
 });
 
-//CRUD ROOMS
-app.get("/rooms", (req, res) => {
-  new mssql.Request().query("SELECT * FROM Rooms", (err, result) => {
-    if (err) {
-      console.error("Error executing query: ", err);
-      return res.status(500).json({ ok: false, reason: "Database error" });
-    }
-    return res.status(200).json({ ok: true, rooms: result.recordset });
-  });
-});
-
-app.post("/rooms", (req, res) => {
-  const { room_number, department_id } = req.body;
-
-  if (!room_number || !department_id) {
-    return res
-      .status(400)
-      .json({ ok: false, reason: "Missing room_number or department_id" });
+app.post("/employees/add", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
 
-  const query =
-    "INSERT INTO Rooms (room_number, department_id) VALUES (@room_number, @department_id)";
-  const request = new mssql.Request();
-  request.input("room_number", mssql.VarChar, room_number);
-  request.input("department_id", mssql.Int, department_id);
-
-  request.query(query, (err) => {
-    if (err) {
-      console.error("Error executing query: ", err);
-      return res.status(500).json({ ok: false, reason: "Database error" });
-    }
-    return res
-      .status(201)
-      .json({ ok: true, message: "Room added successfully" });
-  });
-});
-
-app.put("/rooms/:id", (req, res) => {
-  const room_id = req.params.id;
-  const { room_number, department_id } = req.body;
-
-  if (!room_number || !department_id) {
+  const first_name = req.body.first_name;
+  const last_name = req.body.last_name;
+  const position = req.body.position;
+  if (
+    first_name == null ||
+    last_name == null ||
+    position == null
+  ) {
     return res
       .status(400)
-      .json({ ok: false, reason: "Missing room_number or department_id" });
+      .json({ ok: false, reason: "No first_name, last_name or position" });
   }
 
-  const query =
-    "UPDATE Rooms SET room_number = @room_number, department_id = @department_id WHERE room_id = @room_id";
-  const request = new mssql.Request();
-  request.input("room_id", mssql.Int, room_id);
-  request.input("room_number", mssql.VarChar, room_number);
-  request.input("department_id", mssql.Int, department_id);
-
-  request.query(query, (err, result) => {
-    if (err) {
-      console.error("Error executing query: ", err);
-      return res.status(500).json({ ok: false, reason: "Database error" });
-    }
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ ok: false, reason: "Room not found" });
-    }
-    return res
-      .status(200)
-      .json({ ok: true, message: "Room updated successfully" });
-  });
-});
-
-app.delete("/rooms/:id", (req, res) => {
-  const room_id = req.params.id;
-
-  const query = "DELETE FROM Rooms WHERE room_id = @room_id";
-  const request = new mssql.Request();
-  request.input("room_id", mssql.Int, room_id);
-
-  request.query(query, (err, result) => {
-    if (err) {
-      console.error("Error executing query: ", err);
-      return res.status(500).json({ ok: false, reason: "Database error" });
-    }
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ ok: false, reason: "Room not found" });
-    }
-    return res
-      .status(200)
-      .json({ ok: true, message: "Room deleted successfully" });
-  });
-});
-
-// OBSŁUGA DEPARTMENT
-
-app.get("/departments", async (req, res) => {
-  try {
-    const pool = await mssql.connect(sqlconfig);
-    const result = await pool.request().query(`
-        SELECT d.department_id, d.name, d.open_time, d.close_time, 
-              a.street, a.phone_number
-        FROM Department d
-        LEFT JOIN Department_address a ON d.department_address_id = a.department_address_id
-      `);
-
-    // Grupowanie danych na poziomie backendu
-    const departments = {};
-    result.recordset.forEach((row) => {
-      if (!departments[row.department_id]) {
-        departments[row.department_id] = {
-          department_id: row.department_id,
-          name: row.name,
-          open_time: row.open_time,
-          close_time: row.close_time,
-          address: { street: row.street },
-          phones: [],
-        };
+  new mssql.Request().query(
+    "INSERT INTO Employees (first_name, last_name, position) VALUES('" + first_name +
+      "', '" + last_name +
+      "', '" + position + "')",
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
       }
-      if (row.phone_number) {
-        departments[row.department_id].phones.push({
-          phone_number: row.phone_number,
-        });
+    }
+  );
+});
+
+app.post("/employees/update", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  const id = req.body.id;
+  const first_name = req.body.first_name;
+  const last_name = req.body.last_name;
+  const position = req.body.position;
+  if (
+    id == null ||
+    first_name == null ||
+    last_name == null ||
+    position == null
+  ) {
+    return res
+      .status(400)
+      .json({ ok: false, reason: "No id, first_name, last_name or position" });
+  }
+
+  new mssql.Request().query(
+    "UPDATE Employees SET first_name = '" + first_name +
+      "', last_name = '" + last_name +
+      "', position = '" + position +
+      "' WHERE employee_id =" + id,
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
       }
-    });
-
-    res.status(200).json({ ok: true, departments: Object.values(departments) });
-  } catch (err) {
-    console.error("Error fetching departments: ", err);
-    res.status(500).json({ ok: false, reason: "Database error" });
-  }
+    }
+  );
 });
 
-// Endpoint: Dodaj nowy departament
-app.post("/departments", async (req, res) => {
-  const { name, open_time, close_time, address, phones } = req.body;
-
-  if (!name || !open_time || !close_time || !address?.street) {
-    return res
-      .status(400)
-      .json({ ok: false, reason: "Missing required fields" });
+app.post("/employees/delete", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
 
-  try {
-    const pool = await mssql.connect(sqlconfig);
-
-    // Dodaj departament
-    const insertDepartment = await pool
-      .request()
-      .input("name", mssql.VarChar, name)
-      .input("open_time", mssql.Time, open_time)
-      .input("close_time", mssql.Time, close_time)
-      .query(
-        "INSERT INTO Department (name, open_time, close_time) OUTPUT INSERTED.department_id VALUES (@name, @open_time, @close_time)"
-      );
-
-    const department_id = insertDepartment.recordset[0].department_id;
-
-    // Dodaj adres
-    const insertAddress = await pool
-      .request()
-      .input("department_id", mssql.Int, department_id)
-      .input("street", mssql.VarChar, address.street)
-      .input("phone", mssql.VarChar, phones.phone_number)
-      .query(
-        "INSERT INTO Department_address (department_id, street) OUTPUT INSERTED.department_address_id VALUES (@department_id, @street, @phone)"
-      );
-
-    res.status(201).json({ ok: true });
-  } catch (err) {
-    console.error("Error creating department: ", err);
-    res.status(500).json({ ok: false, reason: "Database error" });
+  const id = req.body.id;
+  if (id == null) {
+    return res.status(400).json({ ok: false, reason: "No id" });
   }
+
+  new mssql.Request().query(
+    "DELETE FROM Employees WHERE employee_id =" + id,
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
 });
 
-// Endpoint: Zaktualizuj istniejący departament
-app.put("/departments/:id", async (req, res) => {
-  const department_id = req.params.id;
-  const { name, open_time, close_time, address, phones } = req.body;
-
-  if (!name || !open_time || !close_time || !address?.street) {
-    return res
-      .status(400)
-      .json({ ok: false, reason: "Missing required fields" });
-  }
-
-  try {
-    const pool = await mssql.connect(sqlconfig);
-
-    // Aktualizuj departament
-    await pool
-      .request()
-      .input("department_id", mssql.Int, department_id)
-      .input("name", mssql.VarChar, name)
-      .input("open_time", mssql.Time, open_time)
-      .input("close_time", mssql.Time, close_time)
-      .query(
-        "UPDATE Department SET name = @name, open_time = @open_time, close_time = @close_time WHERE department_id = @department_id"
-      );
-
-    // Aktualizuj adres
-    await pool
-      .request()
-      .input("department_id", mssql.Int, department_id)
-      .input("street", mssql.VarChar, address.street)
-      .input("phone", mssql.VarChar, phones.phone_number)
-      .query(
-        "UPDATE Department_address SET street = @street, phone_number = @phone WHERE department_id = @department_id"
-      );
-
-    res.status(200).json({ ok: true });
-  } catch (err) {
-    console.error("Error updating department: ", err);
-    res.status(500).json({ ok: false, reason: "Database error" });
-  }
-});
-
-// Endpoint: Usuń departament
-app.delete("/departments/:id", async (req, res) => {
-  const department_id = req.params.id;
-
-  try {
-    const pool = await mssql.connect(sqlconfig);
-
-    // Usuń adres
-    await pool
-      .request()
-      .input("department_id", mssql.Int, department_id)
-      .query(
-        "DELETE FROM Department_address WHERE department_id = @department_id"
-      );
-
-    // Usuń departament
-    await pool
-      .request()
-      .input("department_id", mssql.Int, department_id)
-      .query("DELETE FROM Department WHERE department_id = @department_id");
-
-    res.status(200).json({ ok: true });
-  } catch (err) {
-    console.error("Error deleting department: ", err);
-    res.status(500).json({ ok: false, reason: "Database error" });
-  }
-});
-
+//START SERWERA
 app.listen(port, function () {
   console.log("Server is listening at port " + port + "...");
 });

@@ -17,13 +17,13 @@
   
           <li v-if="isUser" class="nav-item nav-list">
             <li><router-link to="/edit" class="nav-link">Zarządzaj planem</router-link></li>
-            <li><router-link to="/departments" class="nav-link">Zarządzaj wydziałami</router-link></li>
           </li>
           
           <li v-else-if="isAdmin" class="nav-item nav-list">
             <li><router-link to="/edit" class="nav-link">Zarządzaj planem</router-link></li>
             <li><router-link to="/departments" class="nav-link">Zarządzaj wydziałami</router-link></li>
             <li><router-link to="/admin/users" class="nav-link">Zarządzaj użytkownikami</router-link></li>
+            <li><router-link to="/admin/employees" class="nav-link">Zarządzaj pracownikami</router-link></li>
           </li>
         </ul>
       </nav>

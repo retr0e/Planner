@@ -187,7 +187,7 @@ export default {
         });
     },
     getEmployeesFromAPI() {
-      axios.post('https://localhost/employees', {
+      axios.post('https://localhost/employees/get-all-joinedname', {
         key: localStorage.getItem('authToken'),
       })
         .then((response) => {
