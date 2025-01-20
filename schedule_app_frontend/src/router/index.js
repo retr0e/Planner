@@ -8,6 +8,12 @@ import DepartmentManagementView from '../views/DepartmentManagementView.vue';
 import AdminUserManagementView from '../views/AdminUserManagementView.vue';
 import AdminEmployeesManagementView from '@/views/AdminEmployeesManagementView.vue';
 import AdminUserTypesManagementView from '@/views/AdminUserTypesManagementView.vue';
+import AdminRoomsView from '@/views/AdminRoomsView.vue';
+import AdminSemestersManagementView from '@/views/AdminSemestersManagementView.vue';
+import AdminGroupsManagementView from '@/views/AdminGroupsManagementView.vue';
+import AdminDirectionsManagementView from '@/views/AdminDirectionsManagementView.vue';
+import AdminClassessStateManagementView from '@/views/AdminClassessStateManagementView.vue';
+import AdminEditClassView from '@/views/AdminEditClassView.vue';
 
 // Definicje tras
 const routes = [
@@ -23,7 +29,7 @@ const routes = [
     component: LoginView, 
   },
   {
-    path: '/edit',
+    path: '/daily',
     name: 'EditClasses',
     component: DailyScheduleView, 
     meta: { requiresAuth: true }, 
@@ -51,6 +57,42 @@ const routes = [
     name: 'AdminUserTypesManagement',
     component: AdminUserTypesManagementView,
     meta: { requiresAuth: true, requiresAdmin: true },
+  },
+  {
+    path: '/admin/rooms',
+    name: 'AdminRoomsView',
+    component: AdminRoomsView, 
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/semesters',
+    name: 'AdminSemestersManagementView',
+    component: AdminSemestersManagementView, 
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/groups',
+    name: 'AdminGroupsManagementView',
+    component: AdminGroupsManagementView, 
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/directions',
+    name: 'AdminDirectionsManagementView',
+    component: AdminDirectionsManagementView, 
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/classessState',
+    name: 'AdminClassessStateManagementView',
+    component: AdminClassessStateManagementView, 
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/editClass',
+    name: 'AdminEditClassView',
+    component: AdminEditClassView, 
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/:pathMatch(.*)*',
