@@ -1017,6 +1017,150 @@ app.post("/groups-types/get-all", (req, res) => {
   });
 });
 
+//CRUD ROOMS
+app.post("/rooms/get-all", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  new mssql.Request().query("SELECT * FROM Rooms", (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ok: false, reason: "Database error"});
+    }
+    return res.status(200).json({ok: true, rooms: result.recordset});
+  });
+});
+
+app.post("/rooms/add", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const room_number = req.body.room_number;
+  const department_id = req.body.department_id;
+  if(room_number == null || department_id == null) {
+    return res.status(400).json({ok: false, reason: "No room_number or department_id"});
+  }
+  new mssql.Request().query("INSERT INTO Rooms (room_number, department_id) VALUES('" + room_number + "', " + department_id + ")", 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/rooms/update", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  const room_number = req.body.room_number;
+  const department_id = req.body.department_id;
+  if(id == null || room_number == null || department_id == null) {
+    return res.status(400).json({ok: false, reason: "No id, room_number or department_id"});
+  }
+  new mssql.Request().query("UPDATE Rooms SET room_number = '" + room_number + "', department_id = " + department_id + " WHERE room_id =" + id, 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/rooms/delete", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  if(id == null) {
+    return res.status(400).json({ok: false, reason: "No id"});
+  }
+  new mssql.Request().query("DELETE FROM Rooms WHERE room_id =" + id, 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+//CRUD DEPARTMENTS
+app.post("/departments/get-all", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  new mssql.Request().query("SELECT * FROM Department", (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ok: false, reason: "Database error"});
+    }
+    return res.status(200).json({ok: true, departments: result.recordset});
+  });
+});
+
+app.post("/departments/add", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const name = req.body.name;
+  const open_time = req.body.open_time;
+  const close_time = req.body.close_time;
+  if(name == null) {
+    return res.status(400).json({ok: false, reason: "No name"});
+  }
+  new mssql.Request().query("INSERT INTO Department (name, open_time, close_time, department_address_id) VALUES('" + name + "', '" + open_time + "', '" + close_time + "', 1)", 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/departments/update", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  const name = req.body.name;
+  const open_time = req.body.open_time;
+  const close_time = req.body.close_time;
+  if(id == null || name == null) {
+    return res.status(400).json({ok: false, reason: "No id or name"});
+  }
+  new mssql.Request().query("UPDATE Department SET name = '" + name + "', open_time = '" + open_time + "', close_time = '" + close_time + "' WHERE department_id =" + id, 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/departments/delete", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  if(id == null) {
+    return res.status(400).json({ok: false, reason: "No id"});
+  }
+  new mssql.Request().query("DELETE FROM Department WHERE department_id =" + id, 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
 
 //START SERWERA
 app.listen(port, function () {
