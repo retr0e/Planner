@@ -859,6 +859,164 @@ app.post("/classes-states/delete", (req, res) => {
   );
 });
 
+//CRUD SUBJECTS
+app.post("/subjects/get-all", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  new mssql.Request().query("SELECT * FROM Subject", (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ok: false, reason: "Database error"});
+    }
+    return res.status(200).json({ok: true, subjects: result.recordset});
+  });
+});
+
+app.post("/subjects/add", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const name = req.body.name;
+  const course_code = req.body.course_code;
+  if(name == null || course_code == null) {
+    return res.status(400).json({ok: false, reason: "No name or course_code"});
+  }
+  new mssql.Request().query("INSERT INTO Subject (name, course_code) VALUES('" + name + "', '" + course_code + "')", 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/subjects/update", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  const name = req.body.name;
+  const course_code = req.body.course_code;
+  if(id == null || name == null || course_code == null) {
+    return res.status(400).json({ok: false, reason: "No id, name or course_code"});
+  }
+  new mssql.Request().query("UPDATE Subject SET name = '" + name + "', course_code = '" + course_code + "' WHERE subject_id =" + id, 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/subjects/delete", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  if(id == null) {
+    return res.status(400).json({ok: false, reason: "No id"});
+  }
+  new mssql.Request().query("DELETE FROM Subject WHERE subject_id =" + id, 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+//CRUD GROUPS
+app.post("/groups/get-all", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  new mssql.Request().query("SELECT * FROM Groups", (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ok: false, reason: "Database error"});
+    }
+    return res.status(200).json({ok: true, groups: result.recordset});
+  });
+});
+
+app.post("/groups/add", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const group_number = req.body.group_number;
+  const group_type_id = req.body.group_type_id;
+  const subject_id = req.body.subject_id;
+  if(group_number == null || group_type_id == null || subject_id == null) {
+    return res.status(400).json({ok: false, reason: "No group_number, group_type_id or subject_id"});
+  }
+  new mssql.Request().query("INSERT INTO Groups (group_number, group_type_id, subject_id) VALUES(" + group_number + ", " + group_type_id + ", " + subject_id + ")", 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/groups/update", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  const group_number = req.body.group_number;
+  const group_type_id = req.body.group_type_id;
+  const subject_id = req.body.subject_id;
+  if(id == null || group_number == null || group_type_id == null || subject_id == null) {
+    return res.status(400).json({ok: false, reason: "No id, group_number, group_type_id or subject_id"});
+  }
+  new mssql.Request().query("UPDATE Groups SET group_number = " + group_number + ", group_type_id = " + group_type_id + ", subject_id = " + subject_id + " WHERE group_id =" + id, 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/groups/delete", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  if(id == null) {
+    return res.status(400).json({ok: false, reason: "No id"});
+  }
+  new mssql.Request().query("DELETE FROM Groups WHERE group_id =" + id, 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+//CRUD GROUPS TYPES
+app.post("/groups-types/get-all", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  new mssql.Request().query("SELECT * FROM Groups_type", (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ok: false, reason: "Database error"});
+    }
+    return res.status(200).json({ok: true, groups_types: result.recordset});
+  });
+});
+
 
 //START SERWERA
 app.listen(port, function () {
