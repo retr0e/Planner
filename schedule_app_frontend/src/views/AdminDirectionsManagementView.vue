@@ -101,6 +101,8 @@
   </template>
   
   <script>
+  import axios from 'axios';
+
   export default {
     data() {
       return {
@@ -143,15 +145,49 @@
         this.showDirectionModal = true;
       },
       deleteDirection(id) {
-        this.directions = this.directions.filter((direction) => direction.direction_id !== id);
+        axios.post('https://localhost/directions/delete', {
+            key: localStorage.getItem('authToken'),
+            id: id,
+        })
+            .then((response) => {
+                this.$toast.success('Kierunek został usunięty pomyślnie.');
+                this.getDirectionsFromAPI();
+            })
+            .catch((error) => {
+                console.error('Błąd usuwania danych:', error);
+                this.displayError(error.response.data.reason);
+            });
       },
       handleDirectionSubmit() {
         if (this.isEditingDirection) {
-          const index = this.directions.findIndex((d) => d.direction_id === this.directionForm.direction_id);
-          this.$set(this.directions, index, { ...this.directionForm });
+          axios.post('https://localhost/directions/update', {
+              key: localStorage.getItem('authToken'),
+              id: this.directionForm.direction_id,
+              direction_name: this.directionForm.direction_name,
+          })
+              .then((response) => {
+                  this.$toast.success('Kierunek został zaktualizowany pomyślnie.');
+                  this.getDirectionsFromAPI();
+                  this.resetDirectionForm();
+              })
+              .catch((error) => {
+                  console.error('Błąd zapisu danych:', error);
+                  this.displayError(error.response.data.reason);
+              });
         } else {
-          const newId = Math.max(...this.directions.map((d) => d.direction_id)) + 1;
-          this.directions.push({ ...this.directionForm, direction_id: newId });
+          axios.post('https://localhost/directions/add', {
+              key: localStorage.getItem('authToken'),
+              direction_name: this.directionForm.direction_name,
+          })
+              .then((response) => {
+                  this.$toast.success('Kierunek został dodany pomyślnie.');
+                  this.getDirectionsFromAPI();
+                  this.resetDirectionForm();
+              })
+              .catch((error) => {
+                  console.error('Błąd zapisu danych:', error);
+                  this.displayError(error.response.data.reason);
+              });
         }
         this.closeDirectionModal();
       },
@@ -171,19 +207,51 @@
         this.showSpecializationModal = true;
       },
       deleteSpecialization(id) {
-        this.specializations = this.specializations.filter(
-          (specialization) => specialization.direction_specialization_id !== id
-        );
+        axios.post('https://localhost/specializations/delete', {
+            key: localStorage.getItem('authToken'),
+            id: id,
+        })
+            .then((response) => {
+                this.$toast.success('Specjalizacja została usunięta pomyślnie.');
+                this.getSpecialozationsFromAPI();
+            })
+            .catch((error) => {
+                console.error('Błąd usuwania danych:', error);
+                this.displayError(error.response.data.reason);
+            });
       },
       handleSpecializationSubmit() {
         if (this.isEditingSpecialization) {
-          const index = this.specializations.findIndex(
-            (s) => s.direction_specialization_id === this.specializationForm.direction_specialization_id
-          );
-          this.$set(this.specializations, index, { ...this.specializationForm });
+          axios.post('https://localhost/specializations/update', {
+              key: localStorage.getItem('authToken'),
+              id: this.specializationForm.direction_specialization_id,
+              direction_id: this.specializationForm.direction_id,
+              specialization_name: this.specializationForm.specialization_name,
+          })
+              .then((response) => {
+                  this.$toast.success('Specjalizacja została zaktualizowana pomyślnie.');
+                  this.getSpecialozationsFromAPI();
+                  this.resetSpecializationForm();
+              })
+              .catch((error) => {
+                  console.error('Błąd zapisu danych:', error);
+                  this.displayError(error.response.data.reason);
+              });
         } else {
-          const newId = Math.max(...this.specializations.map((s) => s.direction_specialization_id)) + 1;
-          this.specializations.push({ ...this.specializationForm, direction_specialization_id: newId });
+          axios.post('https://localhost/specializations/add', {
+              key: localStorage.getItem('authToken'),
+              direction_id: this.specializationForm.direction_id,
+              specialization_name: this.specializationForm.specialization_name,
+          })
+              .then((response) => {
+                  this.$toast.success('Specjalizacja została dodana pomyślnie.');
+                  this.getSpecialozationsFromAPI();
+                  this.resetSpecializationForm();
+              })
+              .catch((error) => {
+                  console.error('Błąd zapisu danych:', error);
+                  this.displayError(error.response.data.reason);
+              });
         }
         this.closeSpecializationModal();
       },
@@ -194,6 +262,53 @@
         const direction = this.directions.find((d) => d.direction_id === direction_id);
         return direction ? direction.direction_name : "Nieznany";
       },
+      resetDirectionForm() {
+            this.directionForm = {
+                direction_id: null,
+                direction_name: '',
+            };
+            this.isEditingDirection = false;
+      },
+      resetSpecializationForm() {
+            this.specializationForm = {
+              direction_specialization_id: null,
+              direction_id: null,
+              specialization_name: "",
+            };
+            this.isEditingSpecialization = false;
+      },
+      displayError(error) {
+            console.error(error);
+            this.$toast.error(error);
+      },
+      getDirectionsFromAPI() {
+            axios.post('https://localhost/directions/get-all', {
+                key: localStorage.getItem('authToken'),
+            })
+                .then((response) => {
+                    this.directions = response.data.directions;
+                })
+                .catch((error) => {
+                    console.error('Błąd pobierania danych:', error);
+                    this.displayError(error.response.data.reason);
+                });
+      },
+      getSpecialozationsFromAPI() {
+            axios.post('https://localhost/specializations/get-all', {
+                key: localStorage.getItem('authToken'),
+            })
+                .then((response) => {
+                    this.specializations = response.data.specializations;
+                })
+                .catch((error) => {
+                    console.error('Błąd pobierania danych:', error);
+                    this.displayError(error.response.data.reason);
+                });
+      },
+    },
+    created() {
+      this.getDirectionsFromAPI();
+      this.getSpecialozationsFromAPI();
     },
   };
   </script>

@@ -589,6 +589,188 @@ app.post("/user-types/delete", (req, res) => {
   );
 });
 
+//CRUD DIRECTIONS
+
+app.post("/directions/get-all", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  new mssql.Request().query("SELECT direction_id, direction_name FROM Direction", (err, result) => {
+    if (err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ ok: false, reason: "Database error" });
+    }
+    return res.status(200).json({ ok: true, directions: result.recordset });
+  });
+});
+
+app.post("/directions/add", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  const direction_name = req.body.direction_name;
+  if (
+    direction_name == null
+  ) {
+    return res
+      .status(400)
+      .json({ ok: false, reason: "No direction_name" });
+  }
+  new mssql.Request().query(
+    "INSERT INTO Direction (direction_name) VALUES('" + direction_name + "')",
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
+app.post("/directions/update", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  const id = req.body.id;
+  const direction_name = req.body.direction_name;
+  if (
+    id == null ||
+    direction_name == null
+  ) {
+    return res
+      .status(400)
+      .json({ ok: false, reason: "No id or direction_name" });
+  }
+  new mssql.Request().query(
+    "UPDATE Direction SET direction_name = '" + direction_name +
+      "' WHERE direction_id =" + id,
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
+app.post("/directions/delete", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  const id = req.body.id;
+  if (id == null) {
+    return res.status(400).json({ ok: false, reason: "No id" });
+  }
+  new mssql.Request().query(
+    "DELETE FROM Direction WHERE direction_id =" + id,
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
+//CRUD SPECIALIZATIONS
+app.post("/specializations/get-all", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  new mssql.Request().query("SELECT * FROM Direction_Specialization", (err, result) => {
+    if (err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ ok: false, reason: "Database error" });
+    }
+    return res.status(200).json({ ok: true, specializations: result.recordset });
+  });
+});
+
+app.post("/specializations/add", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  const specialization_name = req.body.specialization_name;
+  const direction_id = req.body.direction_id;
+  if (
+    specialization_name == null ||
+    direction_id == null
+  ) {
+    return res
+      .status(400)
+      .json({ ok: false, reason: "No specialization_name" });
+  }
+  new mssql.Request().query(
+    "INSERT INTO Direction_Specialization (specialization_name, direction_id) VALUES('" + specialization_name + "', " + direction_id + ")",
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
+app.post("/specializations/update", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  const id = req.body.id;
+  const specialization_name = req.body.specialization_name;
+  const direction_id = req.body.direction_id;
+  if (
+    id == null ||
+    specialization_name == null ||
+    direction_id == null
+  ) {
+    return res
+      .status(400)
+      .json({ ok: false, reason: "No id or specialization_name" });
+  }
+  new mssql.Request().query(
+    "UPDATE Direction_Specialization SET specialization_name = '" + specialization_name + "', direction_id = " + direction_id +
+      " WHERE direction_specialization_id = " + id,
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
+app.post("/specializations/delete", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  const id = req.body.id;
+  if (id == null) {
+    return res.status(400).json({ ok: false, reason: "No id" });
+  }
+  new mssql.Request().query(
+    "DELETE FROM Direction_Specialization WHERE direction_specialization_id =" + id,
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
 //START SERWERA
 app.listen(port, function () {
   console.log("Server is listening at port " + port + "...");
