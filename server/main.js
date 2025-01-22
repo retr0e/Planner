@@ -771,6 +771,95 @@ app.post("/specializations/delete", (req, res) => {
   );
 });
 
+//CRUD CLASSESS STATES
+app.post("/classes-states/get-all", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  new mssql.Request().query("SELECT * FROM Classes_state", (err, result) => {
+    if (err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ ok: false, reason: "Database error" });
+    }
+    return res.status(200).json({ ok: true, states: result.recordset });
+  });
+});
+
+app.post("/classes-states/add", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  const state_name = req.body.state_name;
+  if (
+    state_name == null
+  ) {
+    return res
+      .status(400)
+      .json({ ok: false, reason: "No state_name" });
+  }
+  new mssql.Request().query(
+    "INSERT INTO Classes_state (state_name) VALUES('" + state_name + "')",
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
+app.post("/classes-states/update", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  const id = req.body.id;
+  const state_name = req.body.state_name;
+  if (
+    id == null ||
+    state_name == null
+  ) {
+    return res
+      .status(400)
+      .json({ ok: false, reason: "No id or state_name" });
+  }
+  new mssql.Request().query(
+    "UPDATE Classes_state SET state_name = '" + state_name +
+      "' WHERE class_state_id =" + id,
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
+app.post("/classes-states/delete", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  const id = req.body.id;
+  if (id == null) {
+    return res.status(400).json({ ok: false, reason: "No id" });
+  }
+  new mssql.Request().query(
+    "DELETE FROM Classes_state WHERE class_state_id =" + id,
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(400).json({ ok: false, reason: err.message });
+      } else {
+        return res.status(200).json({ ok: true });
+      }
+    }
+  );
+});
+
+
 //START SERWERA
 app.listen(port, function () {
   console.log("Server is listening at port " + port + "...");
