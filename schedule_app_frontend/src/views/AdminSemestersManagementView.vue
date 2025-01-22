@@ -14,7 +14,6 @@
             <th>ID</th>
             <th>Rok Akademicki</th>
             <th>Numer Semestru</th>
-            <th>Rok Semestru</th>
             <th>Typ Semestru</th>
             <th>Akcje</th>
           </tr>
@@ -23,8 +22,7 @@
           <tr v-for="semester in semesters" :key="semester.semester_id">
             <td>{{ semester.semester_id }}</td>
             <td>{{ semester.year_id }}</td>
-            <td>{{ semester.nr_semestru }}</td>
-            <td>{{ semester.rok_semestru }}</td>
+            <td>{{ semester.nr_semester }}</td>
             <td>{{ getSemesterType(semester.typ_semestru) }}</td>
             <td>
               <button class="edit-button" @click="editSemester(semester)">Edytuj</button>
@@ -45,11 +43,7 @@
             </div>
             <div class="form-group">
               <label for="nr_semestru">Numer Semestru:</label>
-              <input type="number" v-model="form.nr_semestru" required />
-            </div>
-            <div class="form-group">
-              <label for="rok_semestru">Rok Semestru:</label>
-              <input type="number" v-model="form.rok_semestru" required />
+              <input type="number" v-model="form.nr_semester" required />
             </div>
             <div class="form-group">
               <label for="typ_semestru">Typ Semestru:</label>
@@ -106,17 +100,18 @@
   </template>
   
   <script>
+  import axios from 'axios';
+
   export default {
     data() {
       return {
         // Semesters Data
         semesters: [
-          { semester_id: 1, year_id: 2023, nr_semestru: 1, rok_semestru: 2023, typ_semestru: 1 },
-          { semester_id: 2, year_id: 2023, nr_semestru: 2, rok_semestru: 2023, typ_semestru: 2 },
+          
         ],
         semesterTypes: [
-          { type_id: 1, name: 'Letni' },
-          { type_id: 2, name: 'Zimowy' },
+          { type_id: 1, name: 'Zimowy' },
+          { type_id: 2, name: 'Letni' },
         ],
         // Modal States
         showModal: false,
@@ -127,8 +122,7 @@
         form: {
           semester_id: null,
           year_id: null,
-          nr_semestru: null,
-          rok_semestru: null,
+          nr_semester: null,
           typ_semestru: null,
         },
         typeForm: {
@@ -140,7 +134,7 @@
     methods: {
       openAddModal() {
         this.isEditing = false;
-        this.form = { semester_id: null, year_id: null, nr_semestru: null, rok_semestru: null, typ_semestru: null };
+        this.form = { semester_id: null, year_id: null, nr_semester: null, typ_semestru: null };
         this.showModal = true;
       },
       editSemester(semester) {
@@ -149,15 +143,51 @@
         this.showModal = true;
       },
       deleteSemester(id) {
-        this.semesters = this.semesters.filter((semester) => semester.semester_id !== id);
+        axios.post('https://localhost/semesters/delete', {
+        key: localStorage.getItem('authToken'),
+        id: id,
+      })
+        .then((response) => {
+          this.$toast.success('Semestr został usunięty pomyślnie.');
+          this.getSemestersFromAPI();
+        })
+        .catch((error) => {
+          console.error('Błąd usuwania danych:', error);
+          this.displayError(error.response.data.reason);
+        });
       },
       handleSubmit() {
         if (this.isEditing) {
-          const index = this.semesters.findIndex((s) => s.semester_id === this.form.semester_id);
-          this.$set(this.semesters, index, { ...this.form });
+          axios.post('https://localhost/semesters/update', {
+            key: localStorage.getItem('authToken'),
+            id: this.form.semester_id,
+            year_id: this.form.year_id,
+            nr_semester: this.form.nr_semester,
+            typ_semestru: this.form.typ_semestru,
+          })
+            .then((response) => {
+              this.$toast.success('Semestr został zaktualizowany pomyślnie.');
+              this.getSemestersFromAPI();
+            })
+            .catch((error) => {
+              console.error('Błąd aktualizacji danych:', error);
+              this.displayError(error.response.data.reason);
+            });
         } else {
-          const newId = Math.max(...this.semesters.map((s) => s.semester_id)) + 1;
-          this.semesters.push({ ...this.form, semester_id: newId });
+          axios.post('https://localhost/semesters/add', {
+            key: localStorage.getItem('authToken'),
+            year_id: this.form.year_id,
+            nr_semester: this.form.nr_semester,
+            typ_semestru: this.form.typ_semestru,
+          })
+            .then((response) => {
+              this.$toast.success('Semestr został dodany pomyślnie.');
+              this.getSemestersFromAPI();
+            })
+            .catch((error) => {
+              console.error('Błąd dodawania danych:', error);
+              this.displayError(error.response.data.reason);
+            });
         }
         this.closeModal();
       },
@@ -177,22 +207,86 @@
         this.typeForm = { ...type };
       },
       deleteType(id) {
-        this.semesterTypes = this.semesterTypes.filter((type) => type.type_id !== id);
+        axios.post('https://localhost/semester-types/delete', {
+          key: localStorage.getItem('authToken'),
+          id: id,
+        })
+          .then((response) => {
+            this.$toast.success('Typ semestru został usunięty pomyślnie.');
+            this.getSemesterTypesFromAPI();
+          })
+          .catch((error) => {
+            console.error('Błąd usuwania danych:', error);
+            this.displayError(error.response.data.reason);
+          });
       },
       handleTypeSubmit() {
         if (this.isEditingType) {
-          const index = this.semesterTypes.findIndex((t) => t.type_id === this.typeForm.type_id);
-          this.$set(this.semesterTypes, index, { ...this.typeForm });
+          axios.post('https://localhost/semester-types/update', {
+            key: localStorage.getItem('authToken'),
+            id: this.typeForm.type_id,
+            name: this.typeForm.name,
+          })
+            .then((response) => {
+              this.$toast.success('Typ semestru został zaktualizowany pomyślnie.');
+              this.getSemesterTypesFromAPI();
+            })
+            .catch((error) => {
+              console.error('Błąd aktualizacji danych:', error);
+              this.displayError(error.response.data.reason);
+            });
         } else {
-          const newId = Math.max(...this.semesterTypes.map((t) => t.type_id)) + 1;
-          this.semesterTypes.push({ type_id: newId, name: this.typeForm.name });
+          axios.post('https://localhost/semester-types/add', {
+            key: localStorage.getItem('authToken'),
+            name: this.typeForm.name,
+          })
+            .then((response) => {
+              this.$toast.success('Typ semestru został dodany pomyślnie.');
+              this.getSemesterTypesFromAPI();
+            })
+            .catch((error) => {
+              console.error('Błąd dodawania danych:', error);
+              this.displayError(error.response.data.reason);
+            });
         }
         this.closeTypesModal();
       },
       getSemesterType(typeId) {
-        const type = this.semesterTypes.find((type) => type.type_id === typeId);
+        const type = this.semesterTypes.find((d) => d.type_id === typeId);
         return type ? type.name : 'Nieznany';
       },
+        displayError(error) {
+        console.error(error);
+        this.$toast.error(error);
+      },
+      getSemestersFromAPI() {
+        axios.post('https://localhost/semesters/get-all', {
+          key: localStorage.getItem('authToken'),
+        })
+          .then((response) => {
+            this.semesters = response.data.semesters;
+          })
+          .catch((error) => {
+            console.error('Błąd pobierania danych:', error);
+            this.displayError(error.response.data.reason);
+          });
+      },
+      getSemesterTypesFromAPI() {
+        axios.post('https://localhost/semester-types/get-all', {
+          key: localStorage.getItem('authToken'),
+        })
+          .then((response) => {
+            this.semesterTypes = response.data.semester_types;
+          })
+          .catch((error) => {
+            console.error('Błąd pobierania danych:', error);
+            this.displayError(error.response.data.reason);
+          });
+      },
+    },
+    created() {
+      this.getSemesterTypesFromAPI();
+      this.getSemestersFromAPI();
     },
   };
   </script>

@@ -15,7 +15,7 @@ let logged_users_uuids = [];
 const sqlconfig = {
   user: "sa",
   password: "maselko1",
-  server: "172.25.0.1",
+  server: "192.168.0.82",//"172.25.0.1",
   database: "planlekcji",
   options: {
     encrypt: true,
@@ -1152,6 +1152,154 @@ app.post("/departments/delete", (req, res) => {
     return res.status(400).json({ok: false, reason: "No id"});
   }
   new mssql.Request().query("DELETE FROM Department WHERE department_id =" + id, 
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+//CRUD SEMESTERS
+app.post("/semesters/get-all", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  new mssql.Request().query("SELECT * FROM Semesters", (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ok: false, reason: "Database error"});
+    }
+    return res.status(200).json({ok: true, semesters: result.recordset});
+  });
+});
+
+app.post("/semesters/add", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const year_id = req.body.year_id;
+  const nr_semester = req.body.nr_semester;
+  const typ_semestru = req.body.typ_semestru;
+
+  if(year_id == null || nr_semester == null || typ_semestru == null) {
+    return res.status(400).json({ok: false, reason: "No year_id, nr_semester or typ_semestru"});
+  }
+ 
+  new mssql.Request().query("INSERT INTO Semesters (year_id, nr_semester, typ_semestru) VALUES(" + year_id + ", " + nr_semester + ", " + typ_semestru + ")",
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/semesters/update", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  const year_id = req.body.year_id;
+  const nr_semester = req.body.nr_semester;
+  const typ_semestru = req.body.typ_semestru;
+
+  if(id == null || year_id == null || nr_semester == null || typ_semestru == null) {
+    return res.status(400).json({ok: false, reason: "No id, year_id, nr_semester or typ_semestru"});
+  }
+
+  new mssql.Request().query("UPDATE Semesters SET year_id = " + year_id + ", nr_semester = " + nr_semester + ", typ_semestru = " + typ_semestru + " WHERE semester_id =" + id,
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/semesters/delete", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  if(id == null) {
+    return res.status(400).json({ok: false, reason: "No id"});
+  }
+
+  new mssql.Request().query("DELETE FROM Semesters WHERE semester_id =" + id,
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+//CRUD SEMESTER TYPES
+app.post("/semester-types/get-all", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  new mssql.Request().query("SELECT * FROM SemesterType", (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ok: false, reason: "Database error"});
+    }
+    return res.status(200).json({ok: true, semester_types: result.recordset});
+  });
+});
+
+app.post("/semester-types/add", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const name = req.body.name;
+  if(name == null) {
+    return res.status(400).json({ok: false, reason: "No name"});
+  }
+  new mssql.Request().query("INSERT INTO SemesterType (name) VALUES('" + name + "')",
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/semester-types/update", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  const name = req.body.name;
+  if(id == null || name == null) {
+    return res.status(400).json({ok: false, reason: "No id or name"});
+  }
+  new mssql.Request().query("UPDATE SemesterType SET name = '" + name + "' WHERE type_id =" + id,
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+    return res.status(200).json({ok: true});
+  });
+});
+
+app.post("/semester-types/delete", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  const id = req.body.id;
+  if(id == null) {
+    return res.status(400).json({ok: false, reason: "No id"});
+  }
+
+  new mssql.Request().query("DELETE FROM SemesterType WHERE type_id =" + id,
     (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
