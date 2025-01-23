@@ -57,10 +57,7 @@ export default {
     return {
       // Mockowane dane odpowiadające tabeli Classes_state
       classesStates: [
-        { class_state_id: 1, state_name: "Planowane", isEditing: false, tempStateName: "" },
-        { class_state_id: 2, state_name: "W trakcie", isEditing: false, tempStateName: "" },
-        { class_state_id: 3, state_name: "Zakończone", isEditing: false, tempStateName: "" },
-        { class_state_id: 4, state_name: "Odwołane", isEditing: false, tempStateName: "" },
+        
       ],
       newState: "", // Pole do dodania nowego stanu
     };

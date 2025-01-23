@@ -109,8 +109,7 @@ export default {
     return {
       // Kierunki
       directions: [
-        { direction_id: 1, direction_name: "Informatyka" },
-        { direction_id: 2, direction_name: "Automatyka i Robotyka" },
+        
       ],
       showDirectionModal: false,
       isEditingDirection: false,
@@ -121,8 +120,7 @@ export default {
 
       // Specjalizacje
       specializations: [
-        { direction_specialization_id: 1, direction_id: 1, specialization_name: "Sztuczna Inteligencja" },
-        { direction_specialization_id: 2, direction_id: 2, specialization_name: "Systemy Sterowania" },
+        
       ],
       showSpecializationModal: false,
       isEditingSpecialization: false,

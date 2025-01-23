@@ -124,8 +124,7 @@ export default {
     return {
       // Przedmioty
       subjects: [
-        { subject_id: 1, name: "Matematyka", course_code: "MATH101" },
-        { subject_id: 2, name: "Fizyka", course_code: "PHYS202" },
+        
       ],
       showSubjectModal: false,
       isEditingSubject: false,
@@ -137,12 +136,10 @@ export default {
 
       // Grupy
       groups: [
-        { group_id: 1, subject_id: 1, group_type_id: 1, group_number: 1 },
-        { group_id: 2, subject_id: 2, group_type_id: 2, group_number: 2 },
+        
       ],
       groupTypes: [
-        { group_type_id: 1, type_name: "Laboratorium" },
-        { group_type_id: 2, type_name: "Wykład" },
+        
       ],
       showGroupModal: false,
       isEditingGroup: false,

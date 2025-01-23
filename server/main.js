@@ -11,11 +11,12 @@ const { v4: uuidv4 } = require('uuid');
 const port = 80;
 const api_key = "asdfghjkl";
 let logged_users_uuids = [];
+let logged_admins_uuids = [];
 
 const sqlconfig = {
   user: "sa",
   password: "maselko1",
-  server: "192.168.0.82",//"172.25.0.1",
+  server: "172.25.0.1",
   database: "planlekcji",
   options: {
     encrypt: true,
@@ -57,8 +58,6 @@ app.get("/", async (req, res) => {
 //Empty POST request
 app.post("/", (req, res) => {
   console.log("POST Request!");
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-
   res.status(404).send("Nothing");
 });
 
@@ -120,11 +119,16 @@ app.post("/login", (req, res) => {
           console.dir(result.recordset);
 
           const new_uuid = uuidv4();
+          if (result.recordset[0].account_type_id == 1) {
+            logged_admins_uuids.push(new_uuid);
+          }
+
           logged_users_uuids.push(new_uuid);
+          
 
           return res.status(200).json({
             ok: true,
-            token: api_key,
+            token: new_uuid,
             userRole: result.recordset[0].account_type_id,
             id: result.recordset[0].employee_account_id,
             user: login,
@@ -208,6 +212,9 @@ app.post("/profile/get-all", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key: "+req.body.key });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
 
   new mssql.Request().query("SELECT employee_account_id AS id, login, type_name AS account_type_name, Accounts_type.account_type_id AS account_type, first_name, last_name, Employees.employee_id FROM Employees_accounts LEFT JOIN Employees ON Employees_accounts.employee_id = Employees.employee_id JOIN Accounts_type ON Accounts_type.account_type_id = Employees_accounts.account_type_id", (err, result) => {
     if (err) {
@@ -223,6 +230,9 @@ app.post("/profile/get-accounts-types", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key: "+req.body.key });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
 
   new mssql.Request().query("SELECT account_type_id AS id, type_name AS account_type FROM Accounts_type", (err, result) => {
     if (err) {
@@ -237,6 +247,9 @@ app.post("/profile/get-accounts-types", (req, res) => {
 app.post("/profile/get", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
   }
 
   const id = req.body.user_id;
@@ -276,6 +289,9 @@ app.post("/profile/add", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
 
   const login = req.body.login;
   const password = req.body.password;
@@ -313,6 +329,9 @@ app.post("/profile/update", (req, res) => {
   console.log("Profile edit request");
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
   }
 
   const id = req.body.id;
@@ -353,6 +372,9 @@ app.post("/profile/delete", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
 
   const id = req.body.id;
   if (id == null) {
@@ -378,6 +400,9 @@ app.post("/employees/get-all", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
 
   new mssql.Request().query("SELECT employee_id AS id, first_name, last_name, position FROM Employees", (err, result) => {
     if (err) {
@@ -392,6 +417,9 @@ app.post("/employees/get-all-joinedname", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
 
   new mssql.Request().query("SELECT employee_id AS id, first_name + ' ' + last_name AS name, position FROM Employees", (err, result) => {
     if (err) {
@@ -405,6 +433,9 @@ app.post("/employees/get-all-joinedname", (req, res) => {
 app.post("/employees/add", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
   }
 
   const first_name = req.body.first_name;
@@ -438,6 +469,9 @@ app.post("/employees/add", (req, res) => {
 app.post("/employees/update", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
   }
 
   const id = req.body.id;
@@ -475,6 +509,9 @@ app.post("/employees/delete", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
 
   const id = req.body.id;
   if (id == null) {
@@ -499,6 +536,9 @@ app.post("/user-types/get-all", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
 
   new mssql.Request().query("SELECT account_type_id AS id, type_name AS account_type_name FROM Accounts_type", (err, result) => {
     if (err) {
@@ -512,6 +552,9 @@ app.post("/user-types/get-all", (req, res) => {
 app.post("/user-types/add", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
   }
 
   const account_type_name = req.body.account_type_name;
@@ -539,6 +582,9 @@ app.post("/user-types/add", (req, res) => {
 app.post("/user-types/update", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
   }
 
   const id = req.body.id;
@@ -570,6 +616,9 @@ app.post("/user-types/delete", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
 
   const id = req.body.id;
   if (id == null) {
@@ -595,8 +644,11 @@ app.post("/directions/get-all", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
 
-  new mssql.Request().query("SELECT direction_id, direction_name FROM Direction", (err, result) => {
+  new mssql.Request().query("SELECT * FROM Direction", (err, result) => {
     if (err) {
       console.error("Error executing query: ", err);
       return res.status(500).json({ ok: false, reason: "Database error" });
@@ -609,6 +661,10 @@ app.post("/directions/add", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const direction_name = req.body.direction_name;
   if (
     direction_name == null
@@ -634,6 +690,10 @@ app.post("/directions/update", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   const direction_name = req.body.direction_name;
   if (
@@ -662,6 +722,10 @@ app.post("/directions/delete", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   if (id == null) {
     return res.status(400).json({ ok: false, reason: "No id" });
@@ -684,6 +748,10 @@ app.post("/specializations/get-all", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   new mssql.Request().query("SELECT * FROM Direction_Specialization", (err, result) => {
     if (err) {
       console.error("Error executing query: ", err);
@@ -697,6 +765,10 @@ app.post("/specializations/add", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const specialization_name = req.body.specialization_name;
   const direction_id = req.body.direction_id;
   if (
@@ -724,6 +796,10 @@ app.post("/specializations/update", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   const specialization_name = req.body.specialization_name;
   const direction_id = req.body.direction_id;
@@ -754,6 +830,10 @@ app.post("/specializations/delete", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   if (id == null) {
     return res.status(400).json({ ok: false, reason: "No id" });
@@ -776,6 +856,10 @@ app.post("/classes-states/get-all", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   new mssql.Request().query("SELECT * FROM Classes_state", (err, result) => {
     if (err) {
       console.error("Error executing query: ", err);
@@ -789,6 +873,10 @@ app.post("/classes-states/add", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const state_name = req.body.state_name;
   if (
     state_name == null
@@ -814,6 +902,10 @@ app.post("/classes-states/update", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   const state_name = req.body.state_name;
   if (
@@ -842,6 +934,10 @@ app.post("/classes-states/delete", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   if (id == null) {
     return res.status(400).json({ ok: false, reason: "No id" });
@@ -864,7 +960,32 @@ app.post("/subjects/get-all", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   new mssql.Request().query("SELECT * FROM Subject", (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ok: false, reason: "Database error"});
+    }
+    return res.status(200).json({ok: true, subjects: result.recordset});
+  });
+});
+
+app.post("/subjects/get-by-direction-semester", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
+  const direction_id = req.body.direction_id;
+  const semester_id = req.body.semester_id;
+
+  new mssql.Request().query("SELECT * FROM Subject WHERE direction_id = " + direction_id + " AND semester_id = " + semester_id,
+    (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
       return res.status(500).json({ok: false, reason: "Database error"});
@@ -877,6 +998,10 @@ app.post("/subjects/add", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const name = req.body.name;
   const course_code = req.body.course_code;
   if(name == null || course_code == null) {
@@ -896,6 +1021,10 @@ app.post("/subjects/update", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   const name = req.body.name;
   const course_code = req.body.course_code;
@@ -916,6 +1045,10 @@ app.post("/subjects/delete", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   if(id == null) {
     return res.status(400).json({ok: false, reason: "No id"});
@@ -935,6 +1068,10 @@ app.post("/groups/get-all", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   new mssql.Request().query("SELECT * FROM Groups", (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
@@ -948,6 +1085,10 @@ app.post("/groups/add", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const group_number = req.body.group_number;
   const group_type_id = req.body.group_type_id;
   const subject_id = req.body.subject_id;
@@ -968,6 +1109,10 @@ app.post("/groups/update", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   const group_number = req.body.group_number;
   const group_type_id = req.body.group_type_id;
@@ -989,6 +1134,10 @@ app.post("/groups/delete", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   if(id == null) {
     return res.status(400).json({ok: false, reason: "No id"});
@@ -1008,6 +1157,10 @@ app.post("/groups-types/get-all", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   new mssql.Request().query("SELECT * FROM Groups_type", (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
@@ -1022,6 +1175,10 @@ app.post("/rooms/get-all", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   new mssql.Request().query("SELECT * FROM Rooms", (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
@@ -1035,6 +1192,10 @@ app.post("/rooms/add", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const room_number = req.body.room_number;
   const department_id = req.body.department_id;
   if(room_number == null || department_id == null) {
@@ -1054,6 +1215,10 @@ app.post("/rooms/update", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   const room_number = req.body.room_number;
   const department_id = req.body.department_id;
@@ -1074,6 +1239,10 @@ app.post("/rooms/delete", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   if(id == null) {
     return res.status(400).json({ok: false, reason: "No id"});
@@ -1093,6 +1262,10 @@ app.post("/departments/get-all", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   new mssql.Request().query("SELECT * FROM Department JOIN Department_address ON Department.department_address_id = Department_address.department_address_id", (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
@@ -1106,6 +1279,10 @@ app.post("/departments/add", async (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const name = req.body.name;
   const open_time = req.body.open_time;
   const close_time = req.body.close_time;
@@ -1138,6 +1315,10 @@ app.post("/departments/update", async (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   const name = req.body.name;
   const open_time = req.body.open_time;
@@ -1171,6 +1352,10 @@ app.post("/departments/delete", async (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   if(id == null) {
     return res.status(400).json({ok: false, reason: "No id"});
@@ -1203,6 +1388,10 @@ app.post("/semesters/get-all", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   new mssql.Request().query("SELECT * FROM Semesters", (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
@@ -1216,6 +1405,10 @@ app.post("/semesters/add", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const year_id = req.body.year_id;
   const nr_semester = req.body.nr_semester;
   const typ_semestru = req.body.typ_semestru;
@@ -1223,7 +1416,7 @@ app.post("/semesters/add", (req, res) => {
   if(year_id == null || nr_semester == null || typ_semestru == null) {
     return res.status(400).json({ok: false, reason: "No year_id, nr_semester or typ_semestru"});
   }
- 
+
   new mssql.Request().query("INSERT INTO Semesters (year_id, nr_semester, typ_semestru) VALUES(" + year_id + ", " + nr_semester + ", " + typ_semestru + ")",
     (err, result) => {
     if(err) {
@@ -1238,6 +1431,10 @@ app.post("/semesters/update", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   const year_id = req.body.year_id;
   const nr_semester = req.body.nr_semester;
@@ -1261,6 +1458,10 @@ app.post("/semesters/delete", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   if(id == null) {
     return res.status(400).json({ok: false, reason: "No id"});
@@ -1281,6 +1482,10 @@ app.post("/semester-types/get-all", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   new mssql.Request().query("SELECT * FROM SemesterType", (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
@@ -1294,6 +1499,10 @@ app.post("/semester-types/add", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const name = req.body.name;
   if(name == null) {
     return res.status(400).json({ok: false, reason: "No name"});
@@ -1312,6 +1521,10 @@ app.post("/semester-types/update", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   const name = req.body.name;
   if(id == null || name == null) {
@@ -1331,6 +1544,10 @@ app.post("/semester-types/delete", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
+  if (isAdminKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Not admin session key: "+req.body.key });
+  }
+
   const id = req.body.id;
   if(id == null) {
     return res.status(400).json({ok: false, reason: "No id"});
@@ -1363,14 +1580,22 @@ const server = https.createServer(httpsOptions, app)
  * @returns true if key matches api_key
  */
 function validateAPIKey(key) {
-
   console.dir(logged_users_uuids);
   key = key.replace(/"/g, "");
 
-  //if (!key || !logged_users_uuids.includes(key)) {
-  if (!key || key != api_key) {
+  if (!key || !logged_users_uuids.includes(key)) {
+  //if (!key || key != api_key) {
     console.error("Wrong API key: " + key);
     return true;
   }
   return false;
+}
+
+function isAdminKey(key) {
+  key = key.replace(/"/g, "");
+  if (!key || !logged_admins_uuids.includes(key)) {
+      console.error("Not Admin key: " + key);
+      return true;
+    }
+    return false;
 }

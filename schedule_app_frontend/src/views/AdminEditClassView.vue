@@ -6,14 +6,14 @@
       <div class="filters">
         <select v-model="selectedDirection" @change="fetchSubjects">
           <option value="">Wybierz Kierunek</option>
-          <option v-for="direction in directions" :key="direction.direction_id" :value="direction.direction_name">
+          <option v-for="direction in directions" :key="direction.direction_id" :value="direction.direction_id">
             {{ direction.direction_name }}
           </option>
         </select>
   
         <select v-model="selectedSemester" @change="fetchSubjects">
           <option value="">Wybierz Semestr</option>
-          <option v-for="semester in semesters" :key="semester.semester_id" :value="semester.nr_semester">
+          <option v-for="semester in semesters" :key="semester.semester_id" :value="semester.semester_id">
             Semestr {{ semester.nr_semester }}
           </option>
         </select>
@@ -23,7 +23,7 @@
       <div v-if="subjects.length > 0" class="subjects-list">
         <select v-model="selectedSubject">
           <option value="">Wybierz Przedmiot</option>
-          <option v-for="subject in subjects" :key="subject.subject_id" :value="subject.subject_code">
+          <option v-for="subject in subjects" :key="subject.subject_id" :value="subject.subject_id">
             {{ subject.name }} - {{ subject.subject_code }}
           </option>
         </select>
@@ -55,6 +55,8 @@
   </template>
   
   <script>
+  import axios from "axios";
+
   export default {
     data() {
       return {
@@ -79,29 +81,44 @@
     },
     methods: {
       async fetchDirections() {
-        // Przykładowa lista kierunków (symulacja pobierania danych z bazy)
-        this.directions = [
-          { direction_id: 1, direction_name: "Automatyka" },
-          { direction_id: 2, direction_name: "Informatyka" },
-          { direction_id: 3, direction_name: "Mechanika" },
-        ];
+        axios.post('https://localhost/directions/get-all', {
+        key: localStorage.getItem('authToken'),
+      })
+        .then((response) => {
+          this.directions = response.data.directions;
+        })
+        .catch((error) => {
+          console.error('Błąd pobierania danych:', error);
+          this.displayError(error.response.data.reason);
+        });
       },
       async fetchSemesters() {
-        // Przykładowa lista semestrów (symulacja pobierania danych z bazy)
-        this.semesters = [
-          { semester_id: 1, nr_semester: 1 },
-          { semester_id: 2, nr_semester: 2 },
-          { semester_id: 3, nr_semester: 3 },
-        ];
+        axios.post('https://localhost/semesters/get-all', {
+        key: localStorage.getItem('authToken'),
+      })
+        .then((response) => {
+          this.semesters = response.data.semesters;
+        })
+        .catch((error) => {
+          console.error('Błąd pobierania danych:', error);
+          this.displayError(error.response.data.reason);
+        });
       },
       async fetchSubjects() {
         // Pobierz przedmioty w zależności od wybranego kierunku i semestru
         if (this.selectedDirection && this.selectedSemester) {
-          // Przykładowa lista przedmiotów
-          this.subjects = [
-            { subject_id: 1, subject_code: "CS102", name: "Programowanie", semester: 3, direction: "Automatyka" },
-            { subject_id: 2, subject_code: "MATH202", name: "Matematyka", semester: 3, direction: "Automatyka" },
-          ];
+          axios.post('https://localhost/subjects/get-by-direction-semester', {
+            key: localStorage.getItem('authToken'),
+            direction_id: this.selectedDirection,
+            semester_id: this.selectedSemester,
+          })
+            .then((response) => {
+              this.subjects = response.data.subjects;
+            })
+            .catch((error) => {
+              console.error('Błąd pobierania danych:', error);
+              this.displayError(error.response.data.reason);
+            });
         }
       },
       selectSubject(subjectCode) {
@@ -119,6 +136,9 @@
         const updatedSubject = { ...this.selectedSubjectDetails, ...this.form };
         console.log("Zapisane zajęcia: ", updatedSubject);
         alert("Zajęcia zostały zapisane!");
+      },
+      displayError(message) {
+        this.$toast.error(message);
       },
     },
     watch: {

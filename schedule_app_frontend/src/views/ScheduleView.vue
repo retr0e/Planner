@@ -58,7 +58,7 @@
           <div class="schedule-details">
             <p>Typ: {{ classItem.type }}</p>
             <p>
-              Godziny: {{ new Date(classItem.start_time).getHours() + ":" + new Date(classItem.start_time).getMinutes() }} - {{ new Date(classItem.end_time).getHours() + ":" + new Date(classItem.end_time).getMinutes() }}
+              Godziny: {{ formatTime(classItem.start_time) }} - {{ formatTime(classItem.end_time) }}
             </p>
             <p>Sala: {{ classItem.room }}</p>
             <p>Wykładowca: {{ classItem.instructor }}</p>
@@ -169,6 +169,10 @@ export default {
           item.direction === this.selectedDirection &&
           item.date === this.selectedDate
       );
+    },
+    formatTime(dateString) {
+      const date = new Date(dateString); 
+      return date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
     },
     getScheduleFromAPI() {
       axios

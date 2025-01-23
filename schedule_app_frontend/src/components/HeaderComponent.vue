@@ -13,7 +13,7 @@
       </div>
 
       <transition name="menu-fade">
-        <ul v-if="isMenuOpen" class="menu-dropdown">
+        <ul v-if="isMenuOpen" class="menu-dropdown" @click="toggleMenu">
           <li v-if="!isLoggedIn">
             <router-link  to="/login" class="dropdown-link">Logowanie</router-link>
           </li>
