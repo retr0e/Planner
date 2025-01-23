@@ -1093,7 +1093,7 @@ app.post("/departments/get-all", (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
-  new mssql.Request().query("SELECT * FROM Department", (err, result) => {
+  new mssql.Request().query("SELECT * FROM Department JOIN Department_address ON Department.department_address_id = Department_address.department_address_id", (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
       return res.status(500).json({ok: false, reason: "Database error"});
@@ -1102,17 +1102,29 @@ app.post("/departments/get-all", (req, res) => {
   });
 });
 
-app.post("/departments/add", (req, res) => {
+app.post("/departments/add", async (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
   const name = req.body.name;
   const open_time = req.body.open_time;
   const close_time = req.body.close_time;
-  if(name == null) {
+  const department_address = req.body.department_address;
+  if(name == null || open_time == null || close_time == null || department_address == null) {
     return res.status(400).json({ok: false, reason: "No name"});
   }
-  new mssql.Request().query("INSERT INTO Department (name, open_time, close_time, department_address_id) VALUES('" + name + "', '" + open_time + "', '" + close_time + "', 1)", 
+
+  const request = new mssql.Request()
+  
+  await request.query("INSERT INTO Department_address (street, phone_number) VALUES('" + department_address + "', '')",
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+  });
+
+  await request.query("INSERT INTO Department (name, open_time, close_time, department_address_id) VALUES('" + name + "', '" + open_time + "', '" + close_time + "', (SELECT department_address_id FROM Department_address WHERE street = '" + department_address + "'))", 
     (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
@@ -1122,7 +1134,7 @@ app.post("/departments/add", (req, res) => {
   });
 });
 
-app.post("/departments/update", (req, res) => {
+app.post("/departments/update", async (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
@@ -1130,10 +1142,22 @@ app.post("/departments/update", (req, res) => {
   const name = req.body.name;
   const open_time = req.body.open_time;
   const close_time = req.body.close_time;
-  if(id == null || name == null) {
+  const department_address = req.body.department_address;
+  if(id == null || name == null || open_time == null || close_time == null || department_address == null) {
     return res.status(400).json({ok: false, reason: "No id or name"});
   }
-  new mssql.Request().query("UPDATE Department SET name = '" + name + "', open_time = '" + open_time + "', close_time = '" + close_time + "' WHERE department_id =" + id, 
+
+  const request = new mssql.Request()
+  
+  await request.query("UPDATE Department_address SET street = '" + department_address + "' WHERE department_address_id = (SELECT department_address_id FROM Department WHERE department_id = " + id + ")",
+    (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ok: false, reason: err.message});
+    }
+  });
+
+  await request.query("UPDATE Department SET name = '" + name + "', open_time = '" + open_time + "', close_time = '" + close_time + "' WHERE department_id =" + id, 
     (err, result) => {
     if(err) {
       console.error("Error executing query: ", err);
@@ -1143,7 +1167,7 @@ app.post("/departments/update", (req, res) => {
   });
 });
 
-app.post("/departments/delete", (req, res) => {
+app.post("/departments/delete", async (req, res) => {
   if(validateAPIKey(req.body.key)) {
     return res.status(401).json({ok: false, reason: "Invalid session key"});
   }
@@ -1151,14 +1175,27 @@ app.post("/departments/delete", (req, res) => {
   if(id == null) {
     return res.status(400).json({ok: false, reason: "No id"});
   }
-  new mssql.Request().query("DELETE FROM Department WHERE department_id =" + id, 
-    (err, result) => {
-    if(err) {
-      console.error("Error executing query: ", err);
-      return res.status(400).json({ok: false, reason: err.message});
-    }
-    return res.status(200).json({ok: true});
-  });
+
+  try {
+    const request = new mssql.Request();
+
+    await request.query(`
+      DELETE FROM Department_address 
+      WHERE department_address_id = (
+        SELECT department_address_id FROM Department WHERE department_id = ${id}
+      )
+    `);
+
+    await request.query(`
+      DELETE FROM Department 
+      WHERE department_id = ${id}
+    `);
+
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error("Error executing query: ", err);
+    return res.status(400).json({ ok: false, reason: err.message });
+  }
 });
 
 //CRUD SEMESTERS

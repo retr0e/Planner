@@ -9,13 +9,21 @@
           <label for="name">Nazwa Wydziału</label>
           <input type="text" id="name" v-model="form.name" placeholder="Wprowadź nazwę" required />
         </div>
+        <div>
+          <label for="open_time">Godzina otwarcia</label>
+          <input type="time" id="open_time" v-model="form.open_time" required />
+        </div>
+        <div>
+          <label for="close_time">Godzina zamknięcia</label>
+          <input type="time" id="close_time" v-model="form.close_time" required />
+        </div>
         <div class="form-group">
-          <label for="location">Lokalizacja</label>
+          <label for="location">Adres</label>
           <input
             type="text"
             id="location"
-            v-model="form.location"
-            placeholder="Wprowadź lokalizację"
+            v-model="form.department_address"
+            placeholder="Wprowadź adres"
             required
           />
         </div>
@@ -41,9 +49,9 @@
       <ul>
         <li v-for="(department, index) in departments" :key="index" class="list-item">
           <span>
-            <strong>{{ department.name }}</strong> - {{ department.location }}
+            <strong>{{ department.name }}</strong> - {{ department.street }}
             <br />
-            <small>{{ department.employees }} pracowników</small>
+            <small>Godziny otwarcia: {{ formatTime(department.open_time) }} - {{ formatTime(department.close_time) }}</small>
           </span>
           <div class="actions">
             <button class="btn btn-edit" @click="editDepartment(index)">Edytuj</button>
@@ -56,18 +64,20 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
       departments: [
-        { name: 'Wydział Informatyki', location: 'Warszawa', employees: 50 },
-        { name: 'Wydział Ekonomii', location: 'Kraków', employees: 30 },
-        { name: 'Wydział Mechaniki', location: 'Gdańsk', employees: 40 },
+        
       ],
       form: {
+        department_id: null,
         name: '',
-        location: '',
-        employees: null,
+        open_time: null,
+        close_time: null,
+        street: '',
       },
       editMode: false,
       editIndex: null,
@@ -76,9 +86,38 @@ export default {
   methods: {
     saveDepartment() {
       if (this.editMode) {
-        this.$set(this.departments, this.editIndex, { ...this.form });
+        axios.post('https://localhost/departments/update', {
+          key: localStorage.getItem('authToken'),
+          id: this.form.department_id,
+          name: this.form.name,
+          open_time: this.form.open_time,
+          close_time: this.form.close_time,
+          department_address: this.form.department_address,
+        })
+          .then((response) => {
+            this.$toast.success('Wydział został zaktualizowany pomyślnie.');
+            this.getDepartmentsFromAPI();
+          })
+          .catch((error) => {
+            console.error('Błąd aktualizacji danych:', error);
+            this.displayError(error.response.data.reason);
+          });
       } else {
-        this.departments.push({ ...this.form });
+        axios.post('https://localhost/departments/add', {
+          key: localStorage.getItem('authToken'),
+          name: this.form.name,
+          open_time: this.form.open_time,
+          close_time: this.form.close_time,
+          department_address: this.form.department_address,
+        })
+          .then((response) => {
+            this.$toast.success('Wydział został dodany pomyślnie.');
+            this.getDepartmentsFromAPI();
+          })
+          .catch((error) => {
+            console.error('Błąd dodawania danych:', error);
+            this.displayError(error.response.data.reason);
+          });
       }
       this.resetForm();
     },
@@ -88,7 +127,19 @@ export default {
       this.editMode = true;
     },
     deleteDepartment(index) {
-      this.departments.splice(index, 1);
+      const departmentId = this.departments[index].department_id;
+      axios.post('https://localhost/departments/delete', {
+        key: localStorage.getItem('authToken'),
+        id: departmentId,
+      })
+        .then((response) => {
+          this.$toast.success('Wydział został usunięty pomyślnie.');
+          this.getDepartmentsFromAPI();
+        })
+        .catch((error) => {
+          console.error('Błąd usuwania danych:', error);
+          this.displayError(error.response.data.reason);
+        });
     },
     cancelEdit() {
       this.resetForm();
@@ -98,6 +149,28 @@ export default {
       this.editMode = false;
       this.editIndex = null;
     },
+    displayError(message) {
+      this.$toast.error(message);
+    },
+    getDepartmentsFromAPI() {
+      axios.post('https://localhost/departments/get-all', {
+        key: localStorage.getItem('authToken'),
+      })
+        .then((response) => {
+          this.departments = response.data.departments;
+        })
+        .catch((error) => {
+          console.error('Błąd pobierania danych:', error);
+          this.displayError(error.response.data.reason);
+        });
+    },
+    formatTime(dateString) {
+      const date = new Date(dateString); 
+      return date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    }
+  },
+  created() {
+    this.getDepartmentsFromAPI();
   },
 };
 </script>
