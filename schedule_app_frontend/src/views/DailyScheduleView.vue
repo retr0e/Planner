@@ -7,8 +7,8 @@
         <ul>
           <li v-for="(classItem, index) in classes" :key="index" class="class-item">
             <div>
-              <strong>{{ classItem.name }}</strong>
-              <p>{{ classItem.time }} - {{ classItem.location }}</p>
+              <strong>{{ classItem.name }}</strong> {{ classItem.room_number }}
+              <p>{{ formatTime(classItem.start_time) }} - {{ formatTime(classItem.end_time) }}</p>
             </div>
             <div class="actions">
               <button class="btn btn-edit" @click="editClass(index)">Edytuj</button>
@@ -50,20 +50,26 @@
   </template>
   
   <script>
+  import axios from 'axios';
+
   export default {
     data() {
       return {
         // Przykładowe dane zajęć
         classes: [
-          { name: 'Matematyka', time: '08:00', location: 'Sala 101' },
-          { name: 'Fizyka', time: '10:00', location: 'Sala 202' },
-          { name: 'Informatyka', time: '12:00', location: 'Laboratorium 3' },
+          { name: 'Matematyka', start_time: '08:00', room_number: 'Sala 101' },
+          { name: 'Fizyka', start_time: '10:00', room_number: 'Sala 202' },
+          { name: 'Informatyka', start_time: '12:00', room_number: 'Laboratorium 3' },
         ],
         // Dane formularza
         form: {
           name: '',
-          time: '',
-          location: '',
+          start_time: '',
+          end_time: '',
+          room_number: null,
+          direction_id: null,
+          employee_id: null,
+          semester_id: null,
         },
         editMode: false,
         editIndex: null,
@@ -79,7 +85,9 @@
       // Zapisz zmiany
       saveClass() {
         if (this.editMode) {
-          this.$set(this.classes, this.editIndex, { ...this.form });
+          
+          this.classes[this.editIndex] = { ...this.form };
+
           this.resetForm();
         }
       },
@@ -97,6 +105,26 @@
         this.editMode = false;
         this.editIndex = null;
       },
+      formatTime(dateString) {
+        const date = new Date(dateString); 
+        return date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+      },
+      getClassesFromAPI() {
+        axios.post('https://localhost/classes/get-all',
+          {
+            key: localStorage.getItem('authToken'),
+          }
+        )
+          .then((response) => {
+            this.classes = response.data.classes;
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      },
+    },
+    created() {
+      this.getClassesFromAPI();
     },
   };
   </script>

@@ -23,6 +23,7 @@
           
           <li v-if="isUser"><router-link to="/daily" class="dropdown-link">Dzienny plan</router-link></li>
 
+          <li v-if="isAdmin"><router-link to="/daily" class="dropdown-link">Dzienny plan</router-link></li>
           <li v-if="isAdmin"><router-link to="/admin/editClass" class="dropdown-link">Edycja zajęć</router-link></li>
           <li v-if="isAdmin"><router-link to="/departments" class="dropdown-link">Wydziały</router-link></li>
           <li v-if="isAdmin"><router-link to="/admin/users" class="dropdown-link">Użytkownicy</router-link></li>

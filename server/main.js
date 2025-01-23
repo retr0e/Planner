@@ -1740,6 +1740,30 @@ app.post("/semester-types/delete", (req, res) => {
   );
 });
 
+//CRUD CLASSES
+app.post("/classes/get-all", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+
+  new mssql.Request().query("SELECT * FROM Classes JOIN Classes_dates ON Classes.class_id = Classes_dates.class_id JOIN Rooms ON Rooms.room_id = Classes_dates.room_id JOIN Classes_state ON Classes_state.class_state_id = Classes_dates.state_id JOIN Groups ON Groups.group_id = Classes.group_id JOIN Subject ON Subject.subject_id = Groups.subject_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Schedules ON Schedules.schedule_id = Classes.schedule_id JOIN Direction ON Direction.direction_id = Schedules.direction_id JOIN Semesters ON Semesters.semester_id = Schedules.semester_id", (err, result) => {
+    if(err) {
+      console.error("Error executing query: ", err);
+      return res.status(500).json({ok: false, reason: "Database error"});
+    }
+    return res.status(200).json({ok: true, classes: result.recordset});
+  });
+});
+
+app.post("/classes/add", (req, res) => {
+  if(validateAPIKey(req.body.key)) {
+    return res.status(401).json({ok: false, reason: "Invalid session key"});
+  }
+
+  
+
+});
+
 
 //START SERWERA
 app.listen(port, function () {
