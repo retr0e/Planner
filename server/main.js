@@ -7,6 +7,7 @@ const { start } = require("repl");
 const https = require("https");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
+const MD5 = require("crypto-js/md5");
 
 const port = 80;
 const api_key = "asdfghjkl";
@@ -95,7 +96,9 @@ app.post("/login", (req, res) => {
   console.log("Login attempt " + req.hostname);
   //res.setHeader("Content-Type", "application/json");
   const login = req.body.login;
-  const pass = req.body.password;
+  const pass = MD5(req.body.password).toString();
+
+  console.log("Login: " + login + " Pass: " + pass);
 
   if (login == null || pass == null) {
     return res.status(400).json({ ok: false, reason: "no login or pass" });
@@ -309,7 +312,7 @@ app.post("/profile/add", (req, res) => {
   }
 
   const login = req.body.login;
-  const password = req.body.password;
+  const password = MD5(req.body.password).toString();
   const account_type = req.body.account_type;
   const employee_id = req.body.employee_id;
   if (login == null || password == null || account_type == null) {
@@ -350,7 +353,7 @@ app.post("/profile/update", (req, res) => {
 
   const id = req.body.id;
   const login = req.body.login;
-  const password = req.body.password;
+  const password = MD5(req.body.password).toString();
   const account_type = req.body.account_type;
   const employee_id = req.body.employee_id;
   if (id == null || login == null || password == null || account_type == null) {

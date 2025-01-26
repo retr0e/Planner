@@ -43,7 +43,10 @@ export default {
       try {
         const res = await axios.post(
           'https://localhost/login',
-          this.loginData,
+          {
+            login: this.loginData.login,
+            password: this.loginData.password,
+          },
           {
             withCredentials: true,
           }
