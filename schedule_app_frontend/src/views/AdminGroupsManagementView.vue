@@ -60,7 +60,6 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Przedmiot</th>
             <th>Typ Grupy</th>
             <th>Numer Grupy</th>
             <th>Akcje</th>
@@ -69,7 +68,6 @@
         <tbody>
           <tr v-for="group in groups" :key="group.group_id">
             <td>{{ group.group_id }}</td>
-            <td>{{ getSubjectName(group.subject_id) }}</td>
             <td>{{ getGroupTypeName(group.group_type_id) }}</td>
             <td>{{ group.group_number }}</td>
             <td>
@@ -86,14 +84,6 @@
       <div class="modal-content">
         <h2>{{ isEditingGroup ? 'Edytuj Grupę' : 'Dodaj Grupę' }}</h2>
         <form @submit.prevent="handleGroupSubmit">
-          <div class="form-group">
-            <label for="subject_id">Przedmiot:</label>
-            <select v-model="groupForm.subject_id" required>
-              <option v-for="subject in subjects" :key="subject.subject_id" :value="subject.subject_id">
-                {{ subject.name }}
-              </option>
-            </select>
-          </div>
           <div class="form-group">
             <label for="group_type_id">Typ Grupy:</label>
             <select v-model="groupForm.group_type_id" required>
@@ -145,7 +135,6 @@ export default {
       isEditingGroup: false,
       groupForm: {
         group_id: null,
-        subject_id: null,
         group_type_id: null,
         group_number: null,
       },
@@ -216,7 +205,7 @@ export default {
     //grupy
     openGroupModal() {
       this.isEditingGroup = false;
-      this.groupForm = { group_id: null, subject_id: null, group_type_id: null, group_number: null };
+      this.groupForm = { group_id: null, group_type_id: null, group_number: null };
       this.showGroupModal = true;
     },
     editGroup(group) {
@@ -243,7 +232,6 @@ export default {
         axios.post('https://localhost/groups/update', {
           key: localStorage.getItem('authToken'),
           id: this.groupForm.group_id,
-          subject_id: this.groupForm.subject_id,
           group_type_id: this.groupForm.group_type_id,
           group_number: this.groupForm.group_number,
         })
@@ -258,7 +246,6 @@ export default {
       } else {
         axios.post('https://localhost/groups/add', {
           key: localStorage.getItem('authToken'),
-          subject_id: this.groupForm.subject_id,
           group_type_id: this.groupForm.group_type_id,
           group_number: this.groupForm.group_number,
         })

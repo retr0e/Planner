@@ -31,7 +31,7 @@
           <li v-if="isAdmin"><router-link to="/admin/user-types" class="dropdown-link">Typy użytkowników</router-link></li>
           <li v-if="isAdmin"><router-link to="/admin/rooms" class="dropdown-link">Pokoje</router-link></li>
           <li v-if="isAdmin"><router-link to="/admin/semesters" class="dropdown-link">Semestry</router-link></li>
-          <li v-if="isAdmin"><router-link to="/admin/groups" class="dropdown-link">Grupy</router-link></li>
+          <li v-if="isAdmin"><router-link to="/admin/groups" class="dropdown-link">Grupy i przedmioty</router-link></li>
           <li v-if="isAdmin"><router-link to="/admin/directions" class="dropdown-link">Kierunki</router-link></li>
           <li v-if="isAdmin"><router-link to="/admin/classessState" class="dropdown-link">Stany zajęć</router-link></li>
         </ul>

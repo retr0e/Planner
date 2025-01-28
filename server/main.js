@@ -195,7 +195,7 @@ app.get("/plan-czesc", (req, res) => {
 
 app.get("/plan", (req, res) => {
   const query =
-    "SELECT Classes.class_id AS id, group_number, type_name AS type, Employees.first_name + ' ' + Employees.last_name AS instructor, Classes_dates.date, start_time, end_time, room_number AS room, Department.name AS room_department_name, state_name, Subject.name AS subject_name, Subject.course_code AS subject_code, Semesters.nr_semester AS semester, Direction.direction_name AS direction FROM Schedules JOIN Classes ON Schedules.schedule_id = Classes.schedule_id JOIN Classes_dates ON Classes_dates.class_id = Classes.class_id JOIN Rooms ON Rooms.room_id = Classes_dates.room_id JOIN Department ON Department.department_id = Rooms.department_id JOIN Classes_state ON Classes_state.class_state_id = Classes_dates.state_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Groups ON Groups.group_id = Classes.group_id JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id JOIN Subject ON Subject.subject_id = Groups.subject_id JOIN Semesters ON Semesters.semester_id = Schedules.semester_id JOIN Direction ON Direction.direction_id = Schedules.direction_id;";
+    "SELECT Classes.class_id AS id, group_number, type_name AS type, Employees.first_name + ' ' + Employees.last_name AS instructor, Classes_dates.date, start_time, end_time, room_number AS room, Department.name AS room_department_name, state_name, Subject.name AS subject_name, Subject.course_code AS subject_code, Semesters.nr_semester AS semester, Direction.direction_name AS direction FROM Schedules JOIN Classes ON Schedules.schedule_id = Classes.schedule_id JOIN Classes_dates ON Classes_dates.class_id = Classes.class_id JOIN Rooms ON Rooms.room_id = Classes_dates.room_id JOIN Department ON Department.department_id = Rooms.department_id JOIN Classes_state ON Classes_state.class_state_id = Classes_dates.state_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Groups ON Groups.group_id = Classes.group_id JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id JOIN Subject ON Subject.subject_id = Classes.subject_id JOIN Semesters ON Semesters.semester_id = Schedules.semester_id JOIN Direction ON Direction.direction_id = Schedules.direction_id;";
 
   //console.log(query);
   new mssql.Request().query(query, (err, result) => {
@@ -1026,29 +1026,6 @@ app.post("/subjects/get-all", (req, res) => {
   });
 });
 
-app.post("/subjects/get-by-direction-semester", (req, res) => {
-  if (validateAPIKey(req.body.key)) {
-    return res.status(401).json({ ok: false, reason: "Invalid session key" });
-  }
-
-  const direction_id = req.body.direction_id;
-  const semester_id = req.body.semester_id;
-
-  const request = new mssql.Request();
-  request.input("direction_id", mssql.Int, direction_id);
-  request.input("semester_id", mssql.Int, semester_id);
-  request.query(
-    "SELECT * FROM Subject WHERE direction_id = @direction_id AND semester_id = @semester_id",
-    (err, result) => {
-      if (err) {
-        console.error("Error executing query: ", err);
-        return res.status(500).json({ ok: false, reason: "Database error" });
-      }
-      return res.status(200).json({ ok: true, subjects: result.recordset });
-    }
-  );
-});
-
 app.post("/subjects/add", (req, res) => {
   if (validateAPIKey(req.body.key)) {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
@@ -1152,7 +1129,7 @@ app.post("/groups/get-all", (req, res) => {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
 
-  new mssql.Request().query("SELECT * FROM Groups", (err, result) => {
+  new mssql.Request().query("SELECT * FROM Groups JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id ", (err, result) => {
     if (err) {
       console.error("Error executing query: ", err);
       return res.status(500).json({ ok: false, reason: "Database error" });
@@ -1173,22 +1150,20 @@ app.post("/groups/add", (req, res) => {
 
   const group_number = req.body.group_number;
   const group_type_id = req.body.group_type_id;
-  const subject_id = req.body.subject_id;
-  if (group_number == null || group_type_id == null || subject_id == null) {
+  if (group_number == null || group_type_id == null ) {
     return res
       .status(400)
       .json({
         ok: false,
-        reason: "No group_number, group_type_id or subject_id",
+        reason: "No group_number, group_type_id",
       });
   }
 
   const request = new mssql.Request();
   request.input("group_number", mssql.Int, group_number);
   request.input("group_type_id", mssql.Int, group_type_id);
-  request.input("subject_id", mssql.Int, subject_id);
   request.query(
-    "INSERT INTO Groups (group_number, group_type_id, subject_id) VALUES(@group_number, @group_type_id, @subject_id)",
+    "INSERT INTO Groups (group_number, group_type_id) VALUES(@group_number, @group_type_id)",
     (err, result) => {
       if (err) {
         console.error("Error executing query: ", err);
@@ -1213,18 +1188,16 @@ app.post("/groups/update", (req, res) => {
   const id = req.body.id;
   const group_number = req.body.group_number;
   const group_type_id = req.body.group_type_id;
-  const subject_id = req.body.subject_id;
   if (
     id == null ||
     group_number == null ||
-    group_type_id == null ||
-    subject_id == null
+    group_type_id == null
   ) {
     return res
       .status(400)
       .json({
         ok: false,
-        reason: "No id, group_number, group_type_id or subject_id",
+        reason: "No id, group_number, group_type_id",
       });
   }
 
@@ -1232,9 +1205,8 @@ app.post("/groups/update", (req, res) => {
   request.input("id", mssql.Int, id);
   request.input("group_number", mssql.Int, group_number);
   request.input("group_type_id", mssql.Int, group_type_id);
-  request.input("subject_id", mssql.Int, subject_id);
   request.query(
-    "UPDATE Groups SET group_number = @group_number, group_type_id = @group_type_id, subject_id = @subject_id WHERE group_id = @id",
+    "UPDATE Groups SET group_number = @group_number, group_type_id = @group_type_id WHERE group_id = @id",
     (err, result) => {
       if (err) {
         console.error("Error executing query: ", err);
@@ -1294,7 +1266,7 @@ app.post("/rooms/get-all", (req, res) => {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
 
-  new mssql.Request().query("SELECT * FROM Rooms", (err, result) => {
+  new mssql.Request().query("SELECT * FROM Rooms JOIN Department ON Department.department_id = Rooms.department_id", (err, result) => {
     if (err) {
       console.error("Error executing query: ", err);
       return res.status(500).json({ ok: false, reason: "Database error" });
@@ -1808,7 +1780,60 @@ app.post("/classes/get-all", (req, res) => {
   }
 
   new mssql.Request().query(
-    "SELECT * FROM Classes JOIN Classes_dates ON Classes.class_id = Classes_dates.class_id JOIN Rooms ON Rooms.room_id = Classes_dates.room_id JOIN Classes_state ON Classes_state.class_state_id = Classes_dates.state_id JOIN Groups ON Groups.group_id = Classes.group_id JOIN Subject ON Subject.subject_id = Groups.subject_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Schedules ON Schedules.schedule_id = Classes.schedule_id JOIN Direction ON Direction.direction_id = Schedules.direction_id JOIN Semesters ON Semesters.semester_id = Schedules.semester_id",
+    "SELECT * FROM Classes JOIN Subjects ON Subjects.subject_id = Classes.subject_id JOIN Classes_dates ON Classes.class_id = Classes_dates.class_id JOIN Rooms ON Rooms.room_id = Classes_dates.room_id JOIN Classes_state ON Classes_state.class_state_id = Classes_dates.state_id JOIN Groups ON Groups.group_id = Classes.group_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Schedules ON Schedules.schedule_id = Classes.schedule_id JOIN Direction ON Direction.direction_id = Schedules.direction_id JOIN Semesters ON Semesters.semester_id = Schedules.semester_id",
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(500).json({ ok: false, reason: "Database error" });
+      }
+      return res.status(200).json({ ok: true, classes: result.recordset });
+    }
+  );
+});
+
+app.post("/classes/get-by-dir-and-sem", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  const direction_id = req.body.direction_id;
+  const semester_id = req.body.semester_id;
+  if (direction_id == null || semester_id == null) {
+    return res
+      .status(400)
+      .json({ ok: false, reason: "No direction_id or semester_id" });
+  }
+
+  const request = new mssql.Request();
+
+  request.input("direction_id", mssql.Int, direction_id);
+  request.input("semester_id", mssql.Int, semester_id);
+  request.query(
+    "SELECT * FROM Classes JOIN Groups ON Groups.group_id = Classes.group_id JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id JOIN Subject ON Subject.subject_id = Classes.subject_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Schedules ON Schedules.schedule_id = Classes.schedule_id JOIN Direction ON Direction.direction_id = Schedules.direction_id JOIN Semesters ON Semesters.semester_id = Schedules.semester_id WHERE Schedules.direction_id = @direction_id AND Schedules.semester_id = @semester_id",
+    (err, result) => {
+      if (err) {
+        console.error("Error executing query: ", err);
+        return res.status(500).json({ ok: false, reason: "Database error" });
+      }
+      return res.status(200).json({ ok: true, classes: result.recordset });
+    }
+  );
+});
+
+app.post("/classes/get-by-class", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  const class_id = req.body.class_id;
+  if (class_id == null) {
+    return res.status(400).json({ ok: false, reason: "No class_id" });
+  }
+
+  const request = new mssql.Request();
+  request.input("class_id", mssql.Int, class_id);
+  request.query(
+    "SELECT * FROM Classes_dates JOIN Rooms ON Rooms.room_id = Classes_dates.room_id JOIN Department ON Department.department_id = Rooms.department_id JOIN Classes_state ON Classes_state.class_state_id = Classes_dates.state_id WHERE Classes_dates.class_id = @class_id",
     (err, result) => {
       if (err) {
         console.error("Error executing query: ", err);
@@ -1824,8 +1849,58 @@ app.post("/classes/add", (req, res) => {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
 
-  return res.status(500).json({ ok: false, reason: "Not implemented" });
+  const direction_id = req.body.direction_id;
+  const semester_id = req.body.semester_id;
+  const employee_id = req.body.employee_id;
+  const group_id = req.body.group_id;
+  const subject_id = req.body.subject_id;
 
+  if (direction_id == null || semester_id == null || employee_id == null || group_id == null || subject_id == null) {
+    return res.status(400).json({ ok: false, reason: "No direction_id, semester_id, employee_id or group_id" });
+  }
+
+  const request = new mssql.Request();
+  request.input("direction_id", mssql.Int, direction_id);
+  request.input("semester_id", mssql.Int, semester_id);
+  request.input("employee_id", mssql.Int, employee_id);
+  request.input("group_id", mssql.Int, group_id);
+  request.input("subject_id", mssql.Int, subject_id);
+  request.query("INSERT INTO Classes (schedule_id, employee_id, group_id, subject_id) VALUES((SELECT schedule_id FROM Schedules WHERE direction_id=@direction_id AND semester_id=@semester_id), @employee_id, @group_id, @subject_id)", (err, result) => {
+    if (err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ ok: false, reason: err.message });
+    }
+    return res.status(200).json({ ok: true });
+  });
+});
+
+app.post("/classes/add-date", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  const class_id = req.body.class_id;
+  const date = req.body.date;
+  const room_id = req.body.room_id;
+  const start_time = req.body.start_time;
+  const end_time = req.body.end_time;
+  if (class_id == null || date == null || room_id == null || start_time == null || end_time == null) {
+    return res.status(400).json({ ok: false, reason: "No class_id, date, room_id, start_time or end_time" });
+  }
+
+  const request = new mssql.Request();
+  request.input("class_id", mssql.Int, class_id);
+  request.input("date", mssql.Date, date);
+  request.input("room_id", mssql.Int, room_id);
+  request.input("start_time", mssql.Time, start_time);
+  request.input("end_time", mssql.Time, end_time);
+  request.query("INSERT INTO Classes_dates (class_id, date, room_id, start_time, end_time, state_id) VALUES(@class_id, @date, @room_id, @start_time, @end_time, 1)", (err, result) => {
+    if (err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ ok: false, reason: err.message });
+    }
+    return res.status(200).json({ ok: true });
+  });
 });
 
 app.post("/classes/update", (req, res) => {
@@ -1834,27 +1909,22 @@ app.post("/classes/update", (req, res) => {
   }
 
   const id = req.body.id;
-  const name = req.body.name;
-  const start_time = req.body.start_time;
-  const end_time = req.body.end_time;
-  const room_number = req.body.room_number;
+  const employee_id = req.body.employee_id;
+  const group_id = req.body.group_id;
+  const subject_id = req.body.subject_id;
 
-  if(id == null || name == null || start_time == null || end_time == null || room_number == null) {
+  if(id == null || employee_id == null || group_id == null || subject_id == null) {
     return res.status(400).json({ ok: false, reason: "No id, name, start_time, end_time or room_number" });
   }
-  
-  return res.status(500).json({ ok: false, reason: "Not implemented" });
 
   const request = new mssql.Request();
   request.input("id", mssql.Int, id);
-  request.input("name", mssql.VarChar, name);
-  request.input("start_time", mssql.Time, start_time);
-  request.input("end_time", mssql.Time, end_time);
-  request.input("room_number", mssql.Int, room_number);
+  request.input("employee_id", mssql.Int, employee_id);
+  request.input("group_id", mssql.Int, group_id);
+  request.input("subject_id", mssql.Int, subject_id);
 
   try{
-    request.query("");
-
+    request.query("UPDATE Classes SET employee_id = @employee_id, group_id = @group_id, subject_id = @subject_id WHERE class_id = @id");
 
     return res.status(200).json({ ok: true });
   } catch (err) {
@@ -1873,11 +1943,36 @@ app.post("/classes/delete", (req, res) => {
     return res.status(400).json({ ok: false, reason: "No id" });
   }
 
-  return res.status(500).json({ ok: false, reason: "Not implemented" });
+  const request = new mssql.Request();
+  request.input("id", mssql.Int, id);
+  request.query("DELETE FROM Classes WHERE class_id = @id", (err, result) => {
+    if (err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ ok: false, reason: err.message });
+    }
+    return res.status(200).json({ ok: true });
+  });
+});
+
+app.post("/classes/delete-date", (req, res) => {
+  if (validateAPIKey(req.body.key)) {
+    return res.status(401).json({ ok: false, reason: "Invalid session key" });
+  }
+
+  const id = req.body.id;
+  if (id == null) {
+    return res.status(400).json({ ok: false, reason: "No id" });
+  }
 
   const request = new mssql.Request();
   request.input("id", mssql.Int, id);
-
+  request.query("DELETE FROM Classes_dates WHERE class_date_id = @id", (err, result) => {
+    if (err) {
+      console.error("Error executing query: ", err);
+      return res.status(400).json({ ok: false, reason: err.message });
+    }
+    return res.status(200).json({ ok: true });
+  });
 });
 
 //START SERWERA
