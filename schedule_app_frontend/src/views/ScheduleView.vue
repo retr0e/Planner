@@ -19,7 +19,7 @@
       </select>
 
       <label for="semester">Semestr:</label>
-      <select v-model="selectedSemester" id="semester">
+      <select v-model="selectedSemester" id="semester" @change="updateAvailableDates">
         <option
           v-for="semester in availableSemesters"
           :key="semester"
@@ -30,7 +30,7 @@
       </select>
 
       <label for="date">Data:</label>
-      <select v-model="selectedDate" id="date">
+      <select v-model="selectedDate" id="date" @change="filterSchedule">
         <option v-for="date in availableDates" :key="date" :value="date">
           {{ new Date(date).toLocaleDateString() }}
         </option>
@@ -62,8 +62,6 @@
             </p>
             <p>Sala: {{ classItem.room }}</p>
             <p>Wykładowca: {{ classItem.instructor }}</p>
-            <p>Semestr: {{ classItem.semester }}</p>
-            <p>Kierunek: {{ classItem.direction }}</p>
           </div>
         </li>
       </ul>
