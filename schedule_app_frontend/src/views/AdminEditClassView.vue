@@ -103,7 +103,7 @@
           <label for="employee">Prowadzący:</label>
           <select v-model="newClass.employee_id" required>
             <option value="" disabled>Wybierz prowadzącego</option>
-            <option v-for="lecturer in employees" :key="lecturer.employee_id" :value="lecturer.employee_id">
+            <option v-for="lecturer in lecturers" :key="lecturer.id" :value="lecturer.id">
               {{ lecturer.first_name }} {{ lecturer.last_name }} - {{ lecturer.position }}
             </option>
           </select>
@@ -124,7 +124,7 @@ export default {
       directions: [],
       semesters: [],
       classes: [],
-      employees: [],
+      lecturers: [],
       classTypes: [],
       groups: [],
       schedules: [],
@@ -218,6 +218,7 @@ export default {
         });
     },
     addNewClass() {
+      console.log("employee_id:", this.newClass.employee_id);
       axios.post('https://localhost/classes/add', {
         key: localStorage.getItem('authToken'),
         direction_id: this.selectedDirection,
@@ -307,7 +308,7 @@ export default {
         key: localStorage.getItem('authToken'),
       })
         .then((response) => {
-          this.employees = response.data.employees;
+          this.lecturers = response.data.employees;
         })
         .catch((error) => {
           console.error('Błąd pobierania danych:', error);
@@ -391,6 +392,12 @@ export default {
     },
   },
   watch: {
+    newClass: {
+      deep: true,
+      handler(newVal) {
+        console.log("newClass changed:", newVal);
+      }
+    },
     selectedClassa(newClassaCode) {
       if (newClassaCode) {
         this.selectClassa(newClassaCode);
