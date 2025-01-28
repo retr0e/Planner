@@ -33,9 +33,73 @@
       </button>
     </div>
 
+    <div v-if="selectedClassaDetails" class="edit-subject-form">
+    <h2>Edycja wybranego zajęcia</h2>
+    <form @submit.prevent="editClassa">
+      <!-- Pole wyboru przedmiotu -->
+      <div class="form-group">
+        <label for="editClassaName">Przedmiot:</label>
+        <select
+          id="editClassaName"
+          v-model="selectedClassaDetails.subject_id"
+          required
+        >
+          <option value="" disabled>Wybierz przedmiot</option>
+          <option
+            v-for="subject in subjects"
+            :key="subject.subject_id"
+            :value="subject.subject_id"
+          >
+            {{ subject.name }} - {{ subject.course_code }}
+          </option>
+        </select>
+      </div>
+  
+      <!-- Pole wyboru wykładowcy -->
+      <div class="form-group">
+        <label for="editLecturer">Prowadzący:</label>
+        <select
+          id="editLecturer"
+          v-model="selectedClassaDetails.employee_id"
+          required
+        >
+          <option value="" disabled>Wybierz wykładowcę</option>
+          <option
+            v-for="lecturer in lecturers"
+            :key="lecturer.id"
+            :value="lecturer.id"
+          >
+            {{ lecturer.first_name }} {{ lecturer.last_name }} - {{ lecturer.position }}
+          </option>
+        </select>
+      </div>
+  
+      <!-- Pole wyboru grupy -->
+      <div class="form-group">
+        <label for="editGroup">Grupa:</label>
+        <select
+          id="editGroup"
+          v-model="selectedClassaDetails.group_id"
+          required
+        >
+          <option value="" disabled>Wybierz grupę</option>
+          <option
+            v-for="group in groups"
+            :key="group.group_id"
+            :value="group.group_id"
+          >
+            {{ group.type_name }} - {{ group.group_number }}
+          </option>
+        </select>
+      </div>
+  
+      <button type="submit" class="save-btn">Zapisz Zmiany</button>
+    </form>
+  </div>
+
 
     <!-- Formularz dodawania terminu -->
-    <div v-if="selectedClassaDetails" class="class-form">
+    <div v-if="selectedClassa" class="class-form">
       <form @submit.prevent="addSchedule">
         <h2>Dodaj Termin</h2>
         <div class="form-group">
@@ -130,9 +194,9 @@ export default {
       schedules: [],
       rooms: [],
       subjects: [],
-      selectedDirection: "",
-      selectedSemester: "",
-      selectedClassa: "",
+      selectedDirection: null,
+      selectedSemester: null,
+      selectedClassa: null,
       selectedClassaDetails: null,
       form: {
         start_time: "",
@@ -177,12 +241,36 @@ export default {
         (classa) => classa.class_id === class_id
       );
 
+      console.log("selectedClassaDetails:", this.selectedClassaDetails);
+
       if (this.selectedClassa) {
         this.getClassesDatesFromAPI();
       }
     },
     async fetchGroups() {
       this.getGroupsFromAPI();
+    },
+    editClassa() {
+        const classaIndex = this.classes.findIndex(
+        (classa) => classa.class_id === this.selectedClassa
+      );
+      if (classaIndex !== -1) {
+        axios.post('https://localhost/classes/update', {
+          key: localStorage.getItem('authToken'),
+          id: this.selectedClassa,
+          subject_id: this.selectedClassaDetails.subject_id,
+          employee_id: this.selectedClassaDetails.employee_id,
+          group_id: this.selectedClassaDetails.group_id,
+        })
+          .then((response) => {
+            this.$toast.success('Zajęcia zaktualizowane pomyślnie');
+            this.getClassesFromAPI();
+          })
+          .catch((error) => {
+            console.error('Błąd edycji zajęć:', error);
+            this.displayError(error.response.data.reason);
+          });
+      }
     },
     addSchedule() {
       axios.post('https://localhost/classes/add-date', {
@@ -392,12 +480,6 @@ export default {
     },
   },
   watch: {
-    newClass: {
-      deep: true,
-      handler(newVal) {
-        console.log("newClass changed:", newVal);
-      }
-    },
     selectedClassa(newClassaCode) {
       if (newClassaCode) {
         this.selectClassa(newClassaCode);

@@ -1809,7 +1809,7 @@ app.post("/classes/get-by-dir-and-sem", (req, res) => {
   request.input("direction_id", mssql.Int, direction_id);
   request.input("semester_id", mssql.Int, semester_id);
   request.query(
-    "SELECT * FROM Classes JOIN Groups ON Groups.group_id = Classes.group_id JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id JOIN Subject ON Subject.subject_id = Classes.subject_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Schedules ON Schedules.schedule_id = Classes.schedule_id JOIN Direction ON Direction.direction_id = Schedules.direction_id JOIN Semesters ON Semesters.semester_id = Schedules.semester_id WHERE Schedules.direction_id = @direction_id AND Schedules.semester_id = @semester_id",
+    "SELECT class_id, Schedules.schedule_id, Employees.employee_id, Groups.group_id, Subject.subject_id, Groups_type.group_type_id, Direction.direction_id, Semesters.semester_id, group_number, Groups_type.type_name, Subject.name, Subject.course_code, first_name, last_name, position, direction_name, year_id, typ_semestru FROM Classes JOIN Groups ON Groups.group_id = Classes.group_id JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id JOIN Subject ON Subject.subject_id = Classes.subject_id JOIN Employees ON Employees.employee_id = Classes.employee_id JOIN Schedules ON Schedules.schedule_id = Classes.schedule_id JOIN Direction ON Direction.direction_id = Schedules.direction_id JOIN Semesters ON Semesters.semester_id = Schedules.semester_id WHERE Schedules.direction_id = @direction_id AND Schedules.semester_id = @semester_id ORDER BY name",
     (err, result) => {
       if (err) {
         console.error("Error executing query: ", err);
