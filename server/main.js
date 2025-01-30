@@ -1129,7 +1129,7 @@ app.post("/groups/get-all", (req, res) => {
     return res.status(401).json({ ok: false, reason: "Invalid session key" });
   }
 
-  new mssql.Request().query("SELECT * FROM Groups JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id ", (err, result) => {
+  new mssql.Request().query("SELECT group_id, Groups_type.group_type_id, group_number, type_name FROM Groups JOIN Groups_type ON Groups_type.group_type_id = Groups.group_type_id ", (err, result) => {
     if (err) {
       console.error("Error executing query: ", err);
       return res.status(500).json({ ok: false, reason: "Database error" });
@@ -1862,6 +1862,12 @@ app.post("/classes/add", (req, res) => {
   const request = new mssql.Request();
   request.input("direction_id", mssql.Int, direction_id);
   request.input("semester_id", mssql.Int, semester_id);
+  request.query("INSERT INTO Schedules (direction_id, semester_id) VALUES(@direction_id, @semester_id)", (err, result) => {
+    if (err) {
+      console.error("Schedule already exists", );
+    }
+  });
+
   request.input("employee_id", mssql.Int, employee_id);
   request.input("group_id", mssql.Int, group_id);
   request.input("subject_id", mssql.Int, subject_id);

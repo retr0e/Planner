@@ -57,6 +57,7 @@
           </div>
           <div class="schedule-details">
             <p>Typ: {{ classItem.type }}</p>
+            <p>Grupa: {{ classItem.group_number }}</p>
             <p>
               Godziny: {{ formatTime(classItem.start_time) }} - {{ formatTime(classItem.end_time) }}
             </p>
